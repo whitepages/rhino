@@ -46,7 +46,7 @@ module Rhino
         timestamp = timestamp.to_i if timestamp
         
         rowresult = if timestamp
-                      hbase.getRowTs(table_name, key, timestamp)
+                      hbase.getRowTs(table_name, key, timestamp + 1)
                     else
                       hbase.getRow(table_name, key)
                     end

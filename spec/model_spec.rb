@@ -20,21 +20,21 @@ describe Rhino::Model do
     
     it "NERD" do
       key = 'google.com'
-      p0 = Page.create(key, { :title => 'hi', "contents:gamma" => "3"})
-      p1 = Page.create(key, { :title => 'sexy', "contents:beta" => "2", :timestamp=>@a_while_ago})
-      p2 = Page.create(key, { :title => 'mamma', "contents:alpha" => '1', :timestamp=>@even_longer_ago})
+      p0 = Page.create(key, { :title => 'foo', "contents:gamma" => "3"})
+      p1 = Page.create(key, { :title => 'bar', "contents:beta" => "2", :timestamp=>@a_while_ago})
+      p2 = Page.create(key, { :title => 'foo bar', "contents:alpha" => '1', :timestamp=>@even_longer_ago})
 
       pX = Page.get( key )
-      puts "pX.contents.gamma = #{pX.get_attribute("contents:gamma")}"
-      puts "pX.contents.beta = #{pX.get_attribute("contents:beta")}"
-      puts "pX.contents.alpha = #{pX.get_attribute("contents:alpha")}"
-      puts "pX.title = #{pX.title.inspect}"
+      pX.get_attribute("contents:gamma").should == '3'
+      pX.get_attribute("contents:beta").should == '2'
+      pX.get_attribute("contents:alpha").should == '1'
+      pX.title.should == 'foo'
 
-      pX = Page.get( key, :timestamp=>@a_while_ago+1 )
-      puts "pX.contents.gamma = #{pX.get_attribute("contents:gamma")}"
-      puts "pX.contents.beta = #{pX.get_attribute("contents:beta")}"
-      puts "pX.contents.alpha = #{pX.get_attribute("contents:alpha")}"
-      puts "pX.title = #{pX.title.inspect}"
+      pX = Page.get( key, :timestamp=>@a_while_ago )
+      pX.get_attribute("contents:gamma").should == nil
+      pX.get_attribute("contents:beta").should == '2'
+      pX.get_attribute("contents:alpha").should == '1'
+      pX.title.should == 'bar'
     end
   end
   
@@ -239,8 +239,6 @@ describe Rhino::Model do
     end
   end
 
-  
-
   describe "when working with timestamps" do
     before do
       now = (Time.now.to_f * 1000).to_i
@@ -270,7 +268,7 @@ describe Rhino::Model do
     
     it "should return its timestamp" do
       Page.create('abc123', {:title=>'hello'})
-      Page.get('abc123').timestamp.should be_close((Time.now.to_f * 1000).to_i, 100)
+      Page.get('abc123').timestamp.should be_within(100).of((Time.now.to_f * 1000).to_i)
     end
     
     it "should get the latest row if no timestamp is specified"

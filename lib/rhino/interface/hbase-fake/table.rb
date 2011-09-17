@@ -46,7 +46,7 @@ module Rhino
           last_timestamp = if timestamp.nil?
                              older_timestamps.sort.last
                            else
-                             older_timestamps.delete_if { |old_timestamp| old_timestamp > timestamp }
+                             older_timestamps.delete_if { |old_timestamp| old_timestamp >= timestamp }
                              older_timestamps.sort.last
                            end
           return @rows[key][last_timestamp][:current].merge( 'timestamp' => last_timestamp )
