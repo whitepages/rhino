@@ -12,8 +12,8 @@ module Rhino
       end
       
       def connect
-        transport = TBufferedTransport.new(TSocket.new(host, port))
-        protocol = TBinaryProtocol.new(transport)
+        transport = Thrift::BufferedTransport.new(Thrift::Socket.new(host, port))
+        protocol = Thrift::BinaryProtocol.new(transport)
         @client = Apache::Hadoop::Hbase::Thrift::Hbase::Client.new(protocol)
         transport.open()
       end
@@ -21,8 +21,8 @@ module Rhino
       def connect
         count = 1
         while @client == nil and count < THRIFT_RETRY_COUNT
-          transport = TBufferedTransport.new(TSocket.new(host, port))
-          protocol = TBinaryProtocol.new(transport)
+          transport = Thrift::BufferedTransport.new(Thrift::Socket.new(host, port))
+          protocol = Thrift::BinaryProtocol.new(transport)
           @client = Apache::Hadoop::Hbase::Thrift::Hbase::Client.new(protocol)
           begin
             transport.open()

@@ -21,7 +21,15 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = ">= 1.3.6"
 
-  s.add_development_dependency "rspec"
+  s.add_dependency "thrift", "~>0.6.0"
+  s.add_dependency "activesupport", "~> 3.1.0"
+  s.add_dependency "i18n", "~> 0.5.0"
+  
+# WAITING FOR INTERNAL PUBLISHING TO WORK
+#  s.add_dependency "hbase-thrift", "~>0.90.2"
+  
+  s.add_development_dependency 'rspec'
+  s.add_development_dependency 'rake', '0.8.7'
 
   s.files        = Dir.glob("lib/**/*") + %w(CHANGELOG INSTALL MIT-LICENSE README)
   s.require_paths = ['lib']

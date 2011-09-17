@@ -15,7 +15,25 @@ module Rhino
       end
       
       DEFAULT_GET_OPTIONS = {:timestamp => nil, :columns => nil}
-    
+
+      def create_table(column_families)
+        column_descriptors = column_families.collect do |family_name|
+          column = Apache::Hadoop::Hbase::Thrift::ColumnDescriptor.new
+          column.name = family_name
+          column
+        end
+        @hbase.createTable( table_name, column_descriptors )
+      end
+
+      def exists?
+        @hbase.table_names.include?( table_name )
+      end
+      
+      def delete_table
+        @hbase.disableTable( table_name )
+        @hbase.deleteTable( table_name )
+      end
+      
       def get(key, options = {})
         opts = DEFAULT_GET_OPTIONS.merge(options)
         debug("#{self.class.name}#get(#{key.inspect}, #{options.inspect})")
@@ -27,20 +45,20 @@ module Rhino
         timestamp = opts.delete(:timestamp)
         timestamp = timestamp.to_i if timestamp
         
-        begin
-          rowresult = if timestamp
-            hbase.getRowTs(table_name, key, timestamp)
-          else
-            hbase.getRow(table_name, key)
-          end
-        rescue
+        rowresult = if timestamp
+                      hbase.getRowTs(table_name, key, timestamp)
+                    else
+                      hbase.getRow(table_name, key)
+                    end
+        
+        debug("   => #{rowresult.inspect}")
+
+        if rowresult.nil? || rowresult[0].nil?
           raise Rhino::Interface::Table::RowNotFound, "No row found in '#{table_name}' with key '#{key}'"
         end
-
-        debug("   => #{rowresult.inspect}")
         
         # TODO: handle timestamps on a per-cell level
-        return prepare_rowresult(rowresult)
+        return prepare_rowresult(rowresult[0])
 
       end
       

@@ -4,6 +4,10 @@ module Rhino
       def initialize(*args)
         raise NotImplementedError
       end
+
+      def create(column_families)
+        raise NotImplementedError
+      end
       
       def get(*args)
         raise NotImplementedError

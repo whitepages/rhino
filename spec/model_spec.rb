@@ -2,8 +2,40 @@ require File.dirname(__FILE__) + '/spec_helper.rb'
 # TODO: get real fixtures!!
 
 describe Rhino::Model do
+  before do
+    Page.delete_table if Page.table_exists?
+    Page.create_table
+  end
+  
   after do
-    Page.delete_all
+    Page.delete_table
+  end
+
+  describe "really simple sanity test" do
+    before do
+      now = (Time.now.to_f * 1000).to_i
+      @a_while_ago = now - 1000
+      @even_longer_ago = now - 30000
+    end
+    
+    it "NERD" do
+      key = 'google.com'
+      p0 = Page.create(key, { :title => 'hi', "contents:gamma" => "3"})
+      p1 = Page.create(key, { :title => 'sexy', "contents:beta" => "2", :timestamp=>@a_while_ago})
+      p2 = Page.create(key, { :title => 'mamma', "contents:alpha" => '1', :timestamp=>@even_longer_ago})
+
+      pX = Page.get( key )
+      puts "pX.contents.gamma = #{pX.get_attribute("contents:gamma")}"
+      puts "pX.contents.beta = #{pX.get_attribute("contents:beta")}"
+      puts "pX.contents.alpha = #{pX.get_attribute("contents:alpha")}"
+      puts "pX.title = #{pX.title.inspect}"
+
+      pX = Page.get( key, :timestamp=>@a_while_ago+1 )
+      puts "pX.contents.gamma = #{pX.get_attribute("contents:gamma")}"
+      puts "pX.contents.beta = #{pX.get_attribute("contents:beta")}"
+      puts "pX.contents.alpha = #{pX.get_attribute("contents:alpha")}"
+      puts "pX.title = #{pX.title.inspect}"
+    end
   end
   
   describe "when setting up a table" do
@@ -40,7 +72,6 @@ describe Rhino::Model do
       Page.get("this is a non-existent key").should == nil
     end
   end
-  
   
   describe "when introspecting a row" do
     it "should list the columns present" do

@@ -294,6 +294,18 @@ module Rhino
       obj.save(data[:timestamp])
       obj
     end
+
+    def Model.create_table()
+      table.create_table( column_families )
+    end
+
+    def Model.delete_table()
+      table.delete_table
+    end
+
+    def Model.table_exists?
+      table.exists?
+    end    
     
     # Scans the table with +opts+ (if provided) and returns an array of each row that is returned by the scanner.
     # See +scan+ for options.
