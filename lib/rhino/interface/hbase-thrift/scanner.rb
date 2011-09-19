@@ -9,7 +9,6 @@ module Rhino
         @htable = htable
         @opts = opts
         @opts[:start_row] ||= ''
-        @opts[:columns] ||= self.htable.column_families
         #raise @opts[:columns].inspect
         
         open_scanner
@@ -28,10 +27,12 @@ module Rhino
       def next_row
         begin
           rowresult = htable.hbase.scannerGet(@scanner)
-          row = @htable.prepare_rowresult(rowresult)          
-          row['key'] = rowresult.row
+          return nil if rowresult.nil? || rowresult[0].nil?
+          
+          row = @htable.prepare_rowresult(rowresult[0])          
+          row['key'] = rowresult[0].row
           return row
-        rescue Apache::Hadoop::Hbase::Thrift::NotFound
+        rescue Apache::Hadoop::Hbase::Thrift::IOError
           htable.hbase.scannerClose(@scanner)
           return nil
         end
