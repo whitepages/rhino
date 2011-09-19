@@ -34,7 +34,7 @@ describe Rhino::Interface::Table do
     
     it "should get the timestamp" do
       @page_table.put('a99', {'title:'=>'hello2'})
-      @page_table.get('a99')['timestamp'].should be_close((Time.now.to_f * 1000).to_i, 100)
+      @page_table.get('a99')['timestamp'].should be_within(100).of((Time.now.to_f * 1000).to_i)
     end
     
     it "should retrieve the row" do
