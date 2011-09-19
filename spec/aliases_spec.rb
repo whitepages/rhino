@@ -1,6 +1,15 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
 
 describe "when using attribute aliases" do
+  before do
+    Page.delete_table if Page.table_exists?
+    Page.create_table
+  end
+  
+  after do
+    Page.delete_table
+  end
+
   it "should read the value of the target" do
     @page = Page.new('some-page')
     @page.meta_author = 'Alice'

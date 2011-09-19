@@ -1,6 +1,15 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
 
 describe Rhino::Cell do
+  before do
+    Page.delete_table if Page.table_exists?
+    Page.create_table
+  end
+  
+  after do
+    Page.delete_table
+  end
+
   describe "when working with a has_many relationship" do
     before do
       @key = 'hasmany.example.com'
@@ -15,7 +24,7 @@ describe Rhino::Cell do
     it "should return a list of objects that it has_many of" do
       @page.links.keys.sort.should == %w(com.example.an/path com.google.www/search)
     end
-    
+
     it "should allow retrieval by key" do
       @page.links.get('com.example.an/path').contents.should == 'Click now'
       @page.links.get('com.google.www/search').key.should == 'com.google.www/search' 

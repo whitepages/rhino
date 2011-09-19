@@ -2,12 +2,15 @@ require File.dirname(__FILE__) + '/spec_helper.rb'
 
 describe "when using constraints" do
   before do
+    Page.delete_table if Page.table_exists?
+    Page.create_table
     blank_title = ""
     @page = Page.new('some-page', {:title=>blank_title, :contents=>"hello"})
   end
   
   after do
     Page.table.delete_all_rows
+    Page.delete_table
   end
   
   it "should not save objects that violate constraints" do
