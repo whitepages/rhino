@@ -22,7 +22,9 @@ module Rhino
       end
     
       class RowNotFound < Exception
+      end
 
+      class TableNotFound < Exception
       end
     end
   end

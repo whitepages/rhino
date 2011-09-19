@@ -44,12 +44,17 @@ module Rhino
 
         timestamp = opts.delete(:timestamp)
         timestamp = timestamp.to_i if timestamp
-        
-        rowresult = if timestamp
-                      hbase.getRowTs(table_name, key, timestamp + 1)
-                    else
-                      hbase.getRow(table_name, key)
-                    end
+
+        begin
+          rowresult = if timestamp
+                        hbase.getRowTs(table_name, key, timestamp + 1)
+                      else
+                        hbase.getRow(table_name, key)
+                      end
+        rescue Apache::Hadoop::Hbase::Thrift::IOError => e
+          raise Rhino::Interface::Table::TableNotFound, "Table '#{table_name}' not found while looking for key '#{key}'" if !exists?
+          raise e
+        end
         
         debug("   => #{rowresult.inspect}")
 
@@ -80,11 +85,16 @@ module Rhino
           end
           Apache::Hadoop::Hbase::Thrift::Mutation.new(mutation_data)
         end
-        
-        if timestamp
-          hbase.mutateRowTs(table_name, key, mutations, timestamp)
-        else
-          hbase.mutateRow(table_name, key, mutations)
+
+        begin
+          if timestamp
+            hbase.mutateRowTs(table_name, key, mutations, timestamp)
+          else
+            hbase.mutateRow(table_name, key, mutations)
+          end
+        rescue Apache::Hadoop::Hbase::Thrift::IOError => e
+          raise Rhino::Interface::Table::TableNotFound, "Table '#{table_name}' not found while mutating key '#{key}'" if !exists?
+          raise e
         end
       end
       
@@ -117,8 +127,13 @@ module Rhino
       
       private
       def determine_column_families
-        # column names are returned like 'title', not 'title:', so we have to add the colon on
-        @opts[:column_families] = hbase.getColumnDescriptors(table_name).keys.collect { |col_name| "#{col_name}:" }
+        begin
+          # column names are returned like 'title', not 'title:', so we have to add the colon on
+          @opts[:column_families] = hbase.getColumnDescriptors(table_name).keys.collect { |col_name| "#{col_name}:" }
+        rescue Apache::Hadoop::Hbase::Thrift::IOError => e
+          raise Rhino::Interface::Table::TableNotFound, "Table '#{table_name}' not found while getting column descriptors" if !exists?
+          raise e
+        end
       end
     end
   end
