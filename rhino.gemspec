@@ -25,8 +25,7 @@ Gem::Specification.new do |s|
   s.add_dependency "activesupport", "~> 3.1.0"
   s.add_dependency "i18n", "~> 0.5.0"
   
-# WAITING FOR INTERNAL PUBLISHING TO WORK
-#  s.add_dependency "hbase-thrift", "~>0.90.2"
+  s.add_dependency "hbase-thrift", "~>0.90.4"
   
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'rake', '0.8.7'
