@@ -281,8 +281,17 @@ module Rhino
     # Determines the table name, even if the model class is within a module (ex: CoolModule::MyThing -> mythings).
     # You can override this by defining the <tt>table_name</tt> class method on your model class.
     def Model.table_name
-      self.name.downcase.split('::')[-1].pluralize
+      prefix = Model.table_name_prefix.nil? ? "" : Model.table_name_prefix + "-"
+      
+      return prefix + @table_name if !@table_name.nil?
+      return prefix + self.name.downcase.split('::')[-1].pluralize
     end
+
+    def Model.table_name=( table_name )
+      @table_name = table_name
+    end
+
+    cattr_accessor :table_name_prefix
     
     # loads an existing record's data into an object
     def Model.load(key, data)
