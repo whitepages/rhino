@@ -36,5 +36,5 @@ class Page < Rhino::Model
   has_many :links, Link
   has_many :images, Image
   
-  constraint(:title_required) { |page| page.title and !page.title.empty? }
+  validates_presence_of :title
 end

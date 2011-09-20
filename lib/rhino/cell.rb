@@ -1,6 +1,9 @@
 module Rhino
   class Cell
     attr_reader :key, :contents, :proxy
+
+    include ActiveModel::Validations
+    include ActiveModel::Serialization
     
     def initialize(key, contents, proxy)
       # Don't set these through #key= and #contents= because those go into Rhino::Model and change the data,

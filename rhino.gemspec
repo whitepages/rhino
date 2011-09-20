@@ -23,7 +23,8 @@ Gem::Specification.new do |s|
 
   s.add_dependency "thrift", "~>0.6.0"
   s.add_dependency "activesupport", "~> 3.1.0"
-  s.add_dependency "i18n", "~> 0.5.0"
+  s.add_dependency "activemodel", "~> 3.1.0"
+  s.add_dependency "i18n", "~> 0.6.0"
   
   s.add_dependency "hbase-thrift", "~>0.90.4"
   

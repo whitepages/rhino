@@ -2,6 +2,7 @@ $:.unshift File.dirname(__FILE__)
 
 require "rubygems"
 require 'active_support'
+require 'active_model'
 
 # cherry-pick ActiveSupport modules if we can (throws errors under rails 2.3)
 # only need Class.cattr_accessor from ActiveSupport

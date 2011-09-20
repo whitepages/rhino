@@ -74,6 +74,9 @@ module Rhino
     extend Rhino::Aliases::ClassMethods
     
     extend Rhino::AttrNames::ClassMethods
+
+    include ActiveModel::Validations
+    include ActiveModel::Serialization
     
     def initialize(key, data={}, opts={})
       debug("Model#initialize(#{key.inspect}, #{data.inspect}, #{opts.inspect})")
@@ -84,7 +87,8 @@ module Rhino
         
     def save(with_timestamp=nil)
       debug("Model#save() [key=#{key.inspect}, data=#{data.inspect}, timestamp=#{timestamp.inspect}]")
-      check_constraints() if respond_to?(:check_constraints)
+      
+      raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages}" if !self.valid?
       
       # we need to delete data['timestamp'] here or else it will be written to hbase as a column (and will
       # cause an error since no 'timestamp' column exists)
