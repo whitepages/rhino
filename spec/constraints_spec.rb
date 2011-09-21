@@ -13,6 +13,10 @@ describe "when using constraints" do
     Page.delete_table
   end
   
+  it "should still handle legacy check constraints" do
+    lambda { @page.check_constraints }.should raise_error(Rhino::ConstraintViolation)
+  end
+  
   it "should not save objects that violate constraints" do
     lambda { @page.save }.should raise_error(Rhino::ConstraintViolation)
   end
@@ -30,3 +34,4 @@ describe "when using constraints" do
     end
   end
 end
+
