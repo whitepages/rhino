@@ -45,12 +45,12 @@ describe Rhino::Model do
   
     describe "when determining the table name" do
       it "should pluralize the class name" do
-        @table.table_name.should == "pages"
+        @table.table_name.should == Rhino::Model.table_name_prefix + "-pages"
       end
       
       it "should heed inflection rules" do
         class Category < Rhino::Model;end
-        Category.table_name.should == 'categories'
+        Category.table_name.should == Rhino::Model.table_name_prefix + '-categories'
       end
     end
   

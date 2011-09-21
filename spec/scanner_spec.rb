@@ -2,10 +2,17 @@ require File.dirname(__FILE__) + '/spec_helper.rb'
 
 describe Rhino::Scanner do
   before do
+    Page.delete_table if Page.table_exists?
+    Page.create_table
     @p1 = Page.create('com.example', :title=>'example')
     @p2 = Page.create('com.google', :title=>'Google', 'links:gov.whitehouse'=>'link1', 'links:gov.change'=>'link2')
     @p3 = Page.create('com.microsoft', :title=>'Microsoft')
     @p4 = Page.create('com.yahoo', :title=>'Yahoo')
+  end
+
+  after do
+    Page.table.delete_all_rows
+    Page.delete_table
   end
   
   def column_data_of(rows)
