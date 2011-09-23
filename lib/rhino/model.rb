@@ -68,34 +68,25 @@ module Rhino
   #   page.meta_author # returns value of meta:author column
   #   page.meta_language = 'en-US' # sets value of meta:language column
   class Model
-    # extend Rhino::Constraints::ClassMethods
-    # include Rhino::Constraints::InstanceMethods
-    
-    extend Rhino::Aliases::ClassMethods
-    
-    extend Rhino::AttrNames::ClassMethods
 
-    include ActiveModel::Validations
-    include ActiveModel::Serialization
-    
     def initialize(key, data={}, opts={})
       debug("Model#initialize(#{key.inspect}, #{data.inspect}, #{opts.inspect})")
-      self.data = data
+      
       self.key = key
       self.opts = {:new_record=>true}.merge(opts)
+      self.attributes = data
     end
         
     def save(with_timestamp=nil)
       debug("Model#save() [key=#{key.inspect}, data=#{data.inspect}, timestamp=#{timestamp.inspect}]")
       
       raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages}" if !self.valid?
-      
+
       # we need to delete data['timestamp'] here or else it will be written to hbase as a column (and will
       # cause an error since no 'timestamp' column exists)
       # but we also want to invalidate the timestamp since saving the row will give it a new timestamp,
       # so this accomplishes both
       data.delete('timestamp')
-      
       self.class.table.put(key, data, with_timestamp)
       if new_record?
         @opts[:new_record] = false
@@ -109,44 +100,12 @@ module Rhino
       self.class.table.delete_row(key)
     end
     
-    def data
-      @data
-    end
-    
-    def key
-      @key
-    end
-    
     def new_record?
       @opts[:new_record]
     end
     
     def was_new_record?
       @opts[:was_new_record] || false
-    end
-    
-    def set_attribute(attr_name, value)
-      debug("Model#set_attribute(#{attr_name.inspect}, #{value.inspect})")
-      @data[attr_name] = value
-    end
-    
-    def get_attribute(attr_name)
-      debug("Model#get_attribute(#{attr_name.inspect}) => #{data[attr_name].inspect}")
-      @data[attr_name]
-    end
-    
-    # If <tt>attr_name</tt> is a column family, nulls out the value. If <tt>attr_name</tt> is a column, removes the column from the row.
-    def delete_attribute(attr_name)
-      debug("Model#delete_attribute(#{attr_name.inspect})")
-      set_attribute(attr_name, nil)
-    end
-    
-    def columns
-      @data.keys
-    end
-    
-    def data
-      @data
     end
     
     # Returns true if the +comparison_object+ is the same object; or is of the same type, has the same key and data, and is not a new record.
@@ -158,15 +117,13 @@ module Rhino
           !comparison_object.new_record?)
     end
     
-    def key=(a_key)
-      @key = a_key
-    end
-    
     def timestamp
+      @data ||= {}
       @data['timestamp']
     end
     
     def timestamp=(a_timestamp)
+      @data ||= {}
       @data['timestamp'] = a_timestamp
     end
     
@@ -190,24 +147,6 @@ module Rhino
       data
     end
 
-    # Attempts to provide access to the data by attribute name.
-    #   page.meta # => page.data['meta:']
-    #   page.meta_author # => page.data['meta:author']
-    def method_missing(method, *args)
-      debug("Model#method_missing(#{method.inspect}, #{args.inspect})")
-      if call_data = self.class.route_attribute_call(method)
-        verb, attr_name = *call_data
-        case verb
-        when :get
-          get_attribute(attr_name)
-        when :set
-          set_attribute(attr_name, args[0])
-        end
-      else
-        super # pass it on to Object#method_missing, which will raise NoMethodError
-      end
-    end    
-    
     #################
     # CLASS METHODS #
     #################
@@ -269,17 +208,6 @@ module Rhino
           #{name}_family.column_full_names
         end
       }
-    end
-    
-    # Specifying that a model <tt>has_many :links</tt> overwrites the Model#links method to
-    # return a proxied array of columns underneath the <tt>links:</tt> column family.
-    def Model.has_many(column_family_name, cell_class=Rhino::Cell)
-      column_family_name = column_family_name.to_s.gsub(':','')
-      define_method(column_family_name) do
-        column_family = send("#{column_family_name}_family")
-        @cells_proxies ||= {}
-        @cells_proxies[column_family_name] ||= Rhino::CellsProxy.new(self, column_family, cell_class)
-      end
     end
     
     # Determines the table name, even if the model class is within a module (ex: CoolModule::MyThing -> mythings).
@@ -363,5 +291,12 @@ module Rhino
     def Model.delete_all
       table.delete_all_rows
     end
+  end
+
+  Model.class_eval do
+    include Aliases, AttrNames, Attributes, Associations
+    
+    include ActiveModel::Validations
+    include ActiveModel::Serialization
   end
 end

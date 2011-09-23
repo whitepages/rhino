@@ -38,3 +38,25 @@ class Page < Rhino::Model
   
   validates_presence_of :title
 end
+
+class Ingredient < Rhino::JsonCell
+
+  UNITS = %w{cup dash drop gallon liter milliliter ounce pint quart tablespoon teaspoon}
+  
+  validates_presence_of :name
+  validates_presence_of :amount
+
+  validates_length_of :name, :minimum => 3
+  validates_inclusion_of :unit, :in => UNITS, :allow_nil => true
+  validates_numericality_of :value, :on => :create  
+end  
+
+class Recipe < Rhino::Model
+  column_family :ingredients
+  column_family :info
+  column_family :tags
+
+  alias_attribute :name, 'info:name'
+
+  has_many :ingredients, Ingredient
+end

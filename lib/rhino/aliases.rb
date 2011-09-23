@@ -1,5 +1,9 @@
 module Rhino
   module Aliases
+    def self.included(base)
+      base.extend(ClassMethods)
+    end
+    
     module ClassMethods
       def self.extended(base)
         @@aliases = {}

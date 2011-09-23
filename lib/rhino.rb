@@ -13,7 +13,6 @@ require 'active_support/inflector'
 
 # class Array; include ActiveSupport::CoreExtensions::Array::ExtractOptions; end
 
-
 require 'rhino/interface/base'
 require 'rhino/interface/table'
 require 'rhino/interface/scanner'
@@ -32,6 +31,8 @@ require 'rhino/interface/hbase-fake/scanner'
 
 require 'rhino/debug'
 require 'rhino/constraints'
+require 'rhino/associations'
+require 'rhino/attributes'
 require 'rhino/attr_names'
 require 'rhino/scanner'
 require 'rhino/aliases'
@@ -39,6 +40,7 @@ require 'rhino/model'
 require 'rhino/column_family'
 require 'rhino/cell'
 require 'rhino/cells_proxy'
+require 'rhino/json_cell'
 require 'rhino/active_record_impersonation'
 
 #when in production, probably want to set RHINO_DEBUG = false in environment.rb

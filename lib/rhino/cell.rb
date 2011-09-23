@@ -1,9 +1,9 @@
 module Rhino
   class Cell
-    attr_reader :key, :contents, :proxy
+    attr_reader :key, :contents
+    attr_accessor :proxy
 
     include ActiveModel::Validations
-    include ActiveModel::Serialization
     
     def initialize(key, contents, proxy)
       # Don't set these through #key= and #contents= because those go into Rhino::Model and change the data,
@@ -14,7 +14,7 @@ module Rhino
     end
     
     def row
-      proxy.row
+      self.proxy.row
     end
     
     def ==(cell2)
@@ -43,6 +43,8 @@ module Rhino
     
     # Writes this cell's key and contents to its row object, but does not save this cell.
     def write
+      raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages}" if !self.valid?
+      
       row.set_attribute(attr_name, contents)
     end
     
@@ -51,10 +53,14 @@ module Rhino
       write
       row.class.table.put(row.key, {attr_name=>contents}, timestamp)
     end
+
+    def delete
+      row.delete_attribute(attr_name)
+    end
     
     # TODO: update to destroy the cell without re-saving the row
     def destroy
-      row.delete_attribute(attr_name)
+      delete
       row.save
     end
     

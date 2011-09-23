@@ -1,24 +1,10 @@
 module Rhino
   module AttrNames
+    def self.included(base)
+      base.extend(ClassMethods)
+    end
+    
     module ClassMethods
-      def route_attribute_call(method)
-        method = method.to_s
-        
-        # find verb (get or set)
-        if method[-1] == ?=
-          verb = :set
-          method = method[0..-2] # remove trailing "="
-        else
-          verb = :get
-        end
-        
-        attr_name = determine_attribute_name(method)
-        return nil unless attr_name
-        
-        debug("-> route_attribute_call: attr_name=#{attr_name.inspect}, verb=#{verb}")
-        return [verb, attr_name]
-      end
-      
       def determine_attribute_name(attr_name)
         debug("   determine_attribute_name(#{attr_name.inspect})")
         

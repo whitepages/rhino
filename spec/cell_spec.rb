@@ -4,10 +4,14 @@ describe Rhino::Cell do
   before do
     Page.delete_table if Page.table_exists?
     Page.create_table
+
+    Recipe.delete_table if Recipe.table_exists?
+    Recipe.create_table
   end
   
   after do
     Page.delete_table
+    Recipe.delete_table
   end
 
   describe "when working with a has_many relationship" do
