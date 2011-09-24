@@ -4,52 +4,31 @@ Rhino is a Ruby object-relational mapping (ORM) for HBase[http://www.hbase.org].
 
 === Support & contact
 
-Author: Quinn Slack qslack@qslack.com[mailto:qslack@qslack.com]
+Authors: Quinn Slack qslack@qslack.com[mailto:qslack@qslack.com], Jay Hoover
 
 Contributors: Dru Jensen
 
 == Getting started
 
-=== Download Rhino
+=== Install Rhino
 
-  git clone git://github.com/sqs/rhino.git
-
+  gem install rhino
+  
 === Installing HBase and Thrift
 
 Since Rhino uses the HBase Thrift API, you must first install both HBase and Thrift. Downloading the latest trunk revisions of each is recommended, but if you encounter problems, try using the latest stable release instead. Here are the basic steps for installing both.
 
 ==== Installing HBase
-  
-  svn co http://svn.apache.org/repos/asf/hadoop/hbase/trunk hbase-core-trunk
-  cd hbase-core-trunk
-  ant
-  
-{More installation instructions}[http://wiki.apache.org/hadoop/Hbase/10Minutes] are available on the HBase Wiki.
+
+There are a number of tutorials and help pages available for
+installing HBase. (The HBase Wiki)[http://wiki.apache.org/hadoop/Hbase]
+is the best place to get started.
 
 ==== Installing Thrift
 
-Thrift[http://developers.facebook.com/thrift/] also requires the Boost C++ libraries; you'll have to get those on your own if your system does not have them.
+Thrift[http://wiki.apache.org/thrift/ThriftInstallation] instructions
+can help you with installing a recent version of the Thrift libraries.
 
-  svn co http://svn.facebook.com/svnroot/thrift/trunk/ thrift-trunk
-  cd thrift-trunk
-  ./bootstrap.sh
-  ./configure && make && sudo make install
-  cd lib/rb
-  sudo ruby setup.rb
-
-==== Starting the HBase and Thrift servers
-
-Once you have installed HBase and Thrift, start HBase, then start the Thrift server. From the root HBase directory, run these commands:
-
-  bin/start-hbase.sh
-  bin/hbase thrift start
-  
-Both servers need to be running to use Rhino. Occasionally, the Thrift server will be unable to connect to HBase. In that case, stop the Thrift server (ctrl-C), stop the HBase server (<tt>bin/stop-hbase.sh</tt>), and then rerun the above commands to restart both. To verify that HBase is running, try running the HBase shell (<tt>bin/hbase shell</tt>).
-
-==== Loading Rhino
-
-Since Rhino is not yet packaged as a gem, you will have to <tt>require 'PATH_TO_RHINO/lib/rhino.rb'</tt> in your scripts.
-  
 == Usage  
 
 === Connect to HBase
@@ -117,7 +96,7 @@ Since we already defined the <tt>meta:</tt> column family, Rhino knows we want t
   page.meta_author = "John Doe"
   page.save
   puts "the author is: #{page.meta_author}"
-  
+
 === has_many and belongs_to
 
 In the model definition above, we stated that a Page <tt>has_many :links</tt> and <tt>has_many :images</tt>. We can 
@@ -142,10 +121,27 @@ define what a Link and an Image is with greater detail now.
 Now that we've defined <tt>Link</tt> and <tt>Image</tt>, we can work with them easily. The following code adds a link to the page <tt>com.example</tt>, which when written to HBase becomes a cell in the <tt>links:</tt> column family named <tt>links:com.google</tt> with the contents <tt>search engine</tt>.
 
   page = Page.get('com.example')
-  page.links.create('com.google', 'search engine')
+  page.links << 'com.google' => 'search engine'
+
+You can add cells to an association in two ways. First, you can pass
+in a hash of 'key' to 'contents' data. Second, you can pass in
+cells. Either mechanism allows you to add one or more cells at a time.
+
+  page.links << Link.new('com.google', 'search engine')
   
-You can also iterate over the collection of links. In this example, we use <tt>Link#url</tt>, a method we defined on the Link class
-to convert from the common <tt>com.example/path</tt> URL storage style to <tt>example.com/path</tt>.
+  page.links.add [ Link.new('com.google', 'search engine'),
+                   Link.new('com.bing, 'search engine') ]
+
+You can also add cells to a row when you are creating it:
+
+  page = Page.new( 'my_page',
+                   :title => 'Basic Page',
+                   :links => [ Link.new('com.google', 'search engine') ] )
+
+You can iterate over the collection of links. In this example, we use
+<tt>Link#url</tt>, a method we defined on the Link class to convert
+from the common <tt>com.example/path</tt> URL storage style to
+<tt>example.com/path</tt>.
 
   page.links.each do |link|
     puts "Link to #{link.url} with text: '#{link.contents}'"
@@ -153,7 +149,27 @@ to convert from the common <tt>com.example/path</tt> URL storage style to <tt>ex
   
 You can also get a specific link.
 
-  google_link_text = page.get('com.google').contents
+  google_link_text = page.links.find('com.google').contents
+
+The find method can also take either a regular expression or a block:
+
+  first_match = page.links.find(/google$/)
+  first_match = page.links.find{ |cell| cell.contents == 'search engine' }
+
+Similarly you can iterate cells based on expressions as well:
+
+  page.links.select(/google$/) do |cell|
+    puts cell.contents
+  end
+
+=== JSON Cells
+
+TODO: document JSON cells
+
+=== ActiveModel Validations
+
+TODO: document ActiveModel Validations on models, cells and
+associations
 
 === Setting timestamps and retrieving by timestamp
   
