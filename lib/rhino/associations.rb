@@ -63,10 +63,11 @@ module Rhino
     
     # Set the specified association instance.
     def association_instance_set(name, association)
-#      association_list = instance_variable_get("@association_list")
-#      association_list = [] if association_list.nil?
-#      association_list << association
-#      instance_variable_set( "@association_list", association_list )
+      # todo: this is potentially not threadsafe
+      association_list = instance_variable_get("@association_list")
+      association_list = [] if association_list.nil?
+      association_list << association
+      instance_variable_set( "@association_list", association_list )
       
       instance_variable_set("@#{name}", association)
     end
@@ -74,9 +75,7 @@ module Rhino
     def write_all_associations
       association_list = instance_variable_get("@association_list")
 
-      puts "GOT ASSOC LIST #{association_list}"
       association_list.each do |proxy|
-        puts "WRITING PROXY FOR #{proxy.inspect}"
         proxy.write_all
       end
     end

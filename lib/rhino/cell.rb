@@ -5,7 +5,7 @@ module Rhino
 
     include ActiveModel::Validations
     
-    def initialize(key, contents, proxy)
+    def initialize(key, contents, proxy = nil)
       # Don't set these through #key= and #contents= because those go into Rhino::Model and change the data,
       # but this data is coming directly from Rhino::Model and is thus up-to-date already.
       @key = key
@@ -14,11 +14,15 @@ module Rhino
     end
     
     def row
+      return nil if self.proxy.nil?
       self.proxy.row
     end
     
     def ==(cell2)
-      row == cell2.row && key == cell2.key && contents == cell2.contents
+      return false if cell2.nil?
+      return false if !row.nil? && !cell2.row.nil? && row != cell2.row
+      
+      key == cell2.key && contents == cell2.contents
     end
     
     # The full column name of this object in its containing row.

@@ -82,6 +82,8 @@ module Rhino
       
       raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages}" if !self.valid?
 
+      write_all_associations
+      
       # we need to delete data['timestamp'] here or else it will be written to hbase as a column (and will
       # cause an error since no 'timestamp' column exists)
       # but we also want to invalidate the timestamp since saving the row will give it a new timestamp,
@@ -286,6 +288,10 @@ module Rhino
       rescue Rhino::Interface::Table::RowNotFound
         return nil
       end
+    end
+
+    class << self
+      alias_method( :find, :get )
     end
     
     def Model.delete_all

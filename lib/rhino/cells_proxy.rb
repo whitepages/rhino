@@ -66,7 +66,14 @@ class Rhino::CellsProxy
   def find(pattern = nil)
     load_target unless loaded?
     if pattern
-      @target.find { |cell| cell.key.match( pattern ) }
+      @target.find do |cell|
+        case pattern
+        when String
+          cell.key == pattern
+        when Regexp
+          cell.key.match( pattern )
+        end
+      end
     else
       @target.find { |cell| yield cell }
     end    
@@ -89,11 +96,11 @@ class Rhino::CellsProxy
   #   return cell
   # end
   
-  def add(key, contents)
-    cell = new_cell(key, contents)
-    self.concat( cell )
-    return cell
-  end
+  # def add(key, contents)
+  #   cell = new_cell(key, contents)
+  #   self.concat( cell )
+  #   return cell
+  # end
   
   def each
     @target.each do |cell|
@@ -163,10 +170,12 @@ class Rhino::CellsProxy
     load_target if @row.new_record?
 
     transaction do
-      flatten_deeper(cells).each do |cell|
-        add_cell_to_target_with_callbacks(cell) do |r|
-          # should not save here ever really
-          # result &&= cell.save unless @row.new_record?
+      flatten_deeper(cells).each do |cell_data|
+        create_cells( cell_data ) do |cell|
+          add_cell_to_target_with_callbacks(cell) do |r|
+            # should not save here ever really
+            # result &&= cell.save unless @row.new_record?
+          end
         end
       end
     end
@@ -176,17 +185,25 @@ class Rhino::CellsProxy
 
   alias_method( :push, :<< )
   alias_method( :concat, :<< )
+  alias_method( :add, :<< )
 
   def delete(*cells)
-    remove_cells(cells) do |cells, old_cells|
-      delete_cells(old_cells) if old_cells.any?
-      cells.each { |cell| @target.delete(cell) }
+    remove_cells(cells) do |cells|
+      cells.each do |cell|
+        puts "removing #{cell}"
+        cell.delete
+        @target.delete(cell)
+      end
     end
   end
 
+  def delete_all
+    delete( @target )
+  end
+  
   def delete_if
-    remove_cells(@target.select { |cell| yield cell } ) do |cells, old_cells|
-      delete_cells(old_cells) if old_cells.any?
+    remove_cells(@target.select { |cell| yield cell } ) do |cells|
+      cells.each { |cell| cell.delete }
       cells.each { |cell| @target.delete(cell) }
     end
   end
@@ -207,7 +224,14 @@ class Rhino::CellsProxy
 
   def valid?
     result = true
-    @target.each { |target| result &= target.valid? }
+    @target.each do |target|
+      result &= target.valid?
+
+      if !target.is_a?( cell_class )
+        result = false
+        target.errors.add "type", "Expected #{cell_class.name} got #{target.class.name}"
+      end
+    end
     result
   end
 
@@ -241,23 +265,18 @@ class Rhino::CellsProxy
       case cell
       when Rhino::Cell
         cell
-      when String
-        find(cell)
+      when String, Regexp
+        select(cell)
       else
-        raise "Unexpected type of cell to remove"
+        raise "Unexpected type of cell to remove #{cell.inspect}"
       end
-    end
-    
+    end.flatten.compact
+
     transaction do
       cells.each { |cell| callback(:before_remove, cell) }
-      old_cells = cells.reject { |r| r.new_cell? }
-      yield(cells, old_cells)
+      yield(cells)
       cells.each { |cell| callback(:after_remove, cell) }
     end
-  end
-
-  def delete_cells(cells)
-    cells.each { |cell| cell.delete }
   end
 
   # If necessary, we should use this method to implement some form of eventual
@@ -273,6 +292,17 @@ class Rhino::CellsProxy
   # deeper solves the majority of the problems.
   def flatten_deeper(array)
     array.collect { |element| (element.respond_to?(:flatten) && !element.is_a?(Hash)) ? element.flatten : element }.flatten
+  end
+
+  def create_cells( cell_data )
+    case cell_data
+    when Rhino::Cell
+      yield cell_data
+    when Hash
+      cell_data.each do |k,v|
+        yield new_cell(k, v)
+      end
+    end
   end
 
   def callback( message, cell )
