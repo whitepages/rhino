@@ -29,4 +29,8 @@ describe Rhino::ColumnFamily do
     @page.set_attribute('links:https://com.google/', 'link text')
     @page.links_family.column_names.should == %w(https://com.google/)
   end
+
+  it "should be able to initialize using a have_one association" do
+  end
+    
 end

@@ -79,7 +79,7 @@ module Rhino
         
     def save(with_timestamp=nil)
       debug("Model#save() [key=#{key.inspect}, data=#{data.inspect}, timestamp=#{timestamp.inspect}]")
-      
+
       raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages}" if !self.valid?
 
       write_all_associations
@@ -127,6 +127,10 @@ module Rhino
     def timestamp=(a_timestamp)
       @data ||= {}
       @data['timestamp'] = a_timestamp
+    end
+    
+    def column_family_keys( column_family )
+      data.keys.select { |k| k.match(/^#{Regexp.escape(column_family)}/)}
     end
     
     private
@@ -187,7 +191,7 @@ module Rhino
 
     class_attribute :column_families
 
-    def Model.column_family(name)
+    def Model.column_family(name, options = {})
       name = name.to_s.gsub(':','')
       self.column_families ||= []
       if self.column_families.include?(name)
@@ -195,13 +199,23 @@ module Rhino
         self.column_families.delete(name)
       end
       self.column_families << name
-      
+
+      if options[:has_one] == true
+        class_eval %Q{
+          def #{name}_family
+            #{name}
+          end
+        }
+      else
+        class_eval %Q{
+          def #{name}_family
+            @#{name}_family ||= Rhino::ColumnFamily.load(self, :#{name})
+          end
+        }
+      end
+
       # also define Model#meta_columns and Model#meta_family methods for each column_family
       class_eval %Q{
-        def #{name}_family
-          @#{name}_family ||= Rhino::ColumnFamily.new(self, :#{name})
-        end
-        
         def #{name}_column_names
           #{name}_family.column_names
         end
@@ -210,6 +224,7 @@ module Rhino
           #{name}_family.column_full_names
         end
       }
+
     end
     
     # Determines the table name, even if the model class is within a module (ex: CoolModule::MyThing -> mythings).

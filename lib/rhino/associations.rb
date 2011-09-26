@@ -17,6 +17,18 @@ module Rhino
         options = { :class => options } if options.is_a?(Class)
         
         collection_accessor_methods( column_family_name, options, CellsProxy ) 
+
+        column_family column_family_name
+      end
+
+      def has_one(column_family_name, options = { :class => Rhino::ColumnFamily })
+        
+        column_family_name = column_family_name.to_s.gsub(':','')
+        options = { :class => options } if options.is_a?(Class)
+        
+        collection_accessor_methods( column_family_name, options, Rhino::ColumnFamilyProxy )
+
+        column_family column_family_name, :has_one => true
       end
 
       def collection_reader_method(name, options, association_proxy_class)
@@ -25,8 +37,7 @@ module Rhino
           association = association_instance_get(name)
           
           unless association
-            column_family = send("#{name}_family")
-            association = association_proxy_class.new(self, column_family, options)
+            association = association_proxy_class.new(self, name, options)
             association_instance_set(name, association)
           end
           

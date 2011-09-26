@@ -1,14 +1,13 @@
 class Rhino::CellsProxy
   include Enumerable
   
-  attr_accessor :row, :column_family, :column_family_name, :cell_class
+  attr_accessor :row, :column_family_name, :cell_class
   
-  def initialize(row, column_family, options)
-    debug("CellsProxy#initialize(row, #{column_family}, #{cell_class})")
+  def initialize(row, column_family_name, options)
+    debug("CellsProxy#initialize(row, #{column_family_name}, #{cell_class})")
     reset
     self.row = row
-    self.column_family = column_family
-    self.column_family_name = column_family.column_family_name
+    self.column_family_name = column_family_name
     self.cell_class = options[:class]
     @options = options
     load_target
@@ -20,7 +19,7 @@ class Rhino::CellsProxy
   end
   
   def keys
-    @column_family.column_names
+    row.column_family_keys(@column_family_name).collect { |k| Rhino::ColumnFamily.extract_attr_name(k) }
   end
   
   def first(*args)
@@ -225,6 +224,7 @@ class Rhino::CellsProxy
       end
     end
   end
+
   
   private
   def add_cell_to_target_with_callbacks(cell)

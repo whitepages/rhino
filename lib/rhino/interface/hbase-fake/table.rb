@@ -1,7 +1,7 @@
 module Rhino
   module HBaseFakeInterface
     class Table < Rhino::Interface::Table
-      attr_reader :hbase, :table_name, :column_families
+      attr_reader :hbase, :table_name, :column_families, :rows
       
       def initialize(hbase, table_name, opts={})
         @rows = {}
@@ -64,15 +64,13 @@ module Rhino
       end
       
       def scan(opts={})
-        Rhino::HBaseThriftInterface::Scanner.new(self, opts)
+        Rhino::HBaseFakeInterface::Scanner.new(self, opts)
       end
       
       def put(key, data, timestamp=nil)
         timestamp = (Time.now.to_f * 1000).to_i if timestamp.nil?
         timestamp = timestamp.to_i
 
-        puts "put(#{key}) = #{data.inspect} at  #{timestamp}"
-        
         @rows[key] ||= {}
         @rows[key][timestamp] ||= {}
         @rows[key][timestamp][:mutations] = merge_mutations( @rows[key][timestamp][:mutations], data )

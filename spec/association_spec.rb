@@ -5,6 +5,32 @@ class ValidatingPage < Page
   validates_length_of :links, :minimum => 1, :maximum => 5
 end
 
+class InfoFamily < Rhino::ColumnFamily
+  belongs_to :page
+
+  define_attribute :crawl_date, :type => Date
+  define_attribute :page_size,  :type => Integer
+end
+
+class ConstraintFamily < InfoFamily
+  set_strict(true)
+  
+  validates_presence_of :crawl_date
+  validates_length_of :name, :minimum => 5
+end
+
+class ColumnFamilyTest < Page
+  @table_name = 'page'
+
+  has_one :test_info, InfoFamily
+end
+
+class ConstraintFamilyTest < Page
+  @table_name = 'page'
+
+  has_one :test_info, ConstraintFamily
+end
+
 describe Rhino::Cell do
   before do
     Page.delete_table if Page.table_exists?
@@ -15,8 +41,128 @@ describe Rhino::Cell do
     Page.delete_table
   end
 
-  describe "when working with a has_many relationship" do
+  describe "when working with a has_one relationship" do
+    it "should be able to create empty relations" do
 
+      test = ColumnFamilyTest.create( 'page_0100',
+                                      :title => 'has one page' )
+      test.test_info.should_not == nil
+      test.test_info.inner.should be_a InfoFamily
+      test.test_info.attributes.size.should == 0
+
+      ColumnFamilyTest.find( 'page_0100' ).test_info.should_not == nil
+      ColumnFamilyTest.find( 'page_0100' ).test_info.inner.should be_a InfoFamily
+      ColumnFamilyTest.find( 'page_0100' ).test_info.attributes.size.should == 0
+    end
+    
+    it "should be possible to replace a relation with a hash" do
+      pending
+      test = ColumnFamilyTest.create( 'page_0100a',
+                                      :title => 'has one page' )
+      test.test_info = {
+        :name => 'hi there',
+      }
+      test.test_info.should_not == nil
+      test.test_info.inner.should be_a InfoFamily
+      test.test_info.name.should == 'hi there'
+    end
+    
+end
+  if false
+    it "should be able to create a full relation with hash" do
+      today = Date.today
+      
+      test = ColumnFamilyTest.create( 'page_0101',
+                                      :title => 'has one page',
+                                      :info => {
+                                        :name => 'Major Page',
+                                        :crawl_date => today } )
+      test.test_info.name.should == 'Major Page'
+      test.test_info.crawl_date.should === today
+      
+      ColumnFamilyTest.find( 'page_0101' ).test_info.should_not == nil
+      ColumnFamilyTest.find( 'page_0101' ).test_info.inner.should be_a InfoFamily
+      ColumnFamilyTest.find( 'page_0101' ).test_info.name.should == 'Major Page'
+      ColumnFamilyTest.find( 'page_0101' ).test_info.crawl_date.should === today
+    end
+
+    it "should be able to create a full relation with instance" do
+      today = Date.today
+      
+      test = ColumnFamilyTest.create( 'page_0102',
+                                      :title => 'has one page',
+                                      :info => InfoFamily.new ( :name => 'Major Page',
+                                                                :crawl_date => today ) )
+      test.test_info.name.should == 'Major Page'
+      test.test_info.crawl_date.should === today
+      
+      ColumnFamilyTest.find( 'page_0102' ).test_info.should_not == nil
+      ColumnFamilyTest.find( 'page_0102' ).test_info.inner.should be_a InfoFamily
+      ColumnFamilyTest.find( 'page_0102' ).test_info.name.should == 'Major Page'
+      ColumnFamilyTest.find( 'page_0102' ).test_info.crawl_date.should === today
+    end
+    
+    it "should be possible to set and retrieve attributes of family" do
+      today = Date.today
+      
+      test = ColumnFamilyTest.create( 'page_0103',
+                                      :title => 'has one page',
+                                      :info => InfoFamily.new ( :name => 'Major Page',
+                                                                :crawl_date => today ) )
+      test.test_info.name.should == 'Major Page'
+      test.test_info.crawl_date.should === today
+
+      test.test_info.page_size = 10000
+
+      ColumnFamilyTest.find( 'page_0103' ).test_info.page_size.should == nil
+      test.save
+      ColumnFamilyTest.find( 'page_0103' ).test_info.page_size.should == 10000
+
+      test.test_info.most_common_word = 'butternut'
+      ColumnFamilyTest.find( 'page_0103' ).test_info.most_common_word.should == nil
+      test.save
+      ColumnFamilyTest.find( 'page_0103' ).test_info.most_common_word.should == 'butternut'
+    end
+
+    it "should be possible to set constraints on family attributes" do
+      lambda do
+        ConstraintFamilyTest.create( 'page_0104',
+                                     :title => 'constraint page',
+                                     :info => {
+                                       :name => 'shrt',
+                                       :crawl_date => today
+                                     })
+      end.should raise ArgumentError
+
+      lambda do
+        ConstraintFamilyTest.create( 'page_0105',
+                                     :title => 'constraint page',
+                                     :info => {
+                                       :name => 'longer name'
+                                     })
+      end.should raise ArgumentError
+      
+      test = ConstraintFamilyTest.new( 'page_0106')
+      test.title = 'constraint page'
+      test.test_info.name = 'shrt'
+      test.test_info.crawl_date = today
+
+      lambda do
+        test.save
+      end.should raise ArgumentError
+
+      test = ConstraintFamilyTest.new( 'page_0106')
+      test.title = 'constraint page'
+      lambda do
+        test.test_info.foo = 'bar'
+      end.should raise ArgumentError
+    end
+    
+  end
+end
+  if false
+  describe "when working with a has_many relationship" do
+    
     it "should be able to create empty relations" do
       page = Page.create( 'page_0001',
                               :title => 'Foo Home Page' )

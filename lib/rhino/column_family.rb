@@ -27,25 +27,99 @@ module Rhino
   #   row.get_attribute('title:english') # => 'Hello'
   class ColumnFamily
     attr_accessor :column_family_name
+    attr_accessor :row
     
-    def initialize(row, column_family_name)
-      @row = row
-      self.column_family_name = column_family_name.to_s
+    def ColumnFamily.load( row, column_family_name )
+      family = self.new
+      family.row = row
+      family.column_family_name = column_family_name.to_s
+
+      family.load
+      family
+    end
+
+    def load
+      data = {}
+      row.column_family_keys(column_family_name).each do |full_name|
+        data[ ColumnFamily.extract_attr_name(full_name) ] = row.get_attribute( full_name )
+      end
+      reset
+      self.attributes = data
+      
+      @loaded = true
+    end
+
+    # Resets the \loaded flag to +false+ and sets the \data to +nil+.
+    def reset
+      @loaded = false
+      @data = {}
     end
     
+    # Has the \data been already \loaded?
+    def loaded?
+      @loaded
+    end
+    
+    def initialize(data = {} )
+      @row = nil
+      @column_family_name = nil
+
+      self.attributes = data
+
+      @loaded = true
+    end
+    
+    # Writes this column family's data to it's columns
+    def write
+      raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages}" if !self.valid?
+
+      attributes.each do |name, value|
+        row.set_attribute("#{column_family_name}:#{attr_name}", value)
+      end
+    end
+    alias_method :write_all, :write
+    
+
     # Returns the full names, including the column family, of each child column. If you only want the second half of the name, with the 
     # family name removed, use +column_names+.
     #   row.column_full_names # => ['title:english', 'title:french', 'title:spanish']
     def column_full_names
-      debug("Rhino::ColumnFamily#columns()")
-      @row.data.keys.select { |k| k.match(/^#{Regexp.escape(column_family_name)}/)}
+      attributes.keys.collect{ |key| "#{column_family_name}:#{key}"}
     end
     
     # Returns the name of the column not including the name of its family. If you want the full name of the column, including the column
     # family name, use +column_full_names+.
     #   row.column_names # => ['english', 'french', 'spanish']
     def column_names
-      column_full_names.collect { |column_full_name| column_full_name.split(':', 2)[1] }
+      attributes.keys
+    end
+
+    def attributes
+      @data
+    end
+
+    def loaded?
+    end
+    
+    def self.belongs_to(containing_class_name)
+      debug("#{self.class.name} belongs_to #{containing_class_name}")
+      # for the Page example, this would define Cell#page
+      define_method(containing_class_name) { row }
+    end
+
+    def ColumnFamily.determine_attribute_name(attr_name)
+      attr_name
+    end
+
+    private
+    def ColumnFamily.extract_attr_name(name)
+      name.split(':', 2)[1]
+    end
+    
+    ColumnFamily.class_eval do
+      include Aliases, Attributes, AttrDefinitions
+      
+      include ActiveModel::Validations
     end
   end
 end
