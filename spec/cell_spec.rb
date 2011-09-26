@@ -4,21 +4,20 @@ describe Rhino::Cell do
   before do
     Page.delete_table if Page.table_exists?
     Page.create_table
-
-    Recipe.delete_table if Recipe.table_exists?
-    Recipe.create_table
   end
   
   after do
     Page.delete_table
-    Recipe.delete_table
   end
 
   describe "when working with a has_many relationship" do
     before do
       @key = 'hasmany.example.com'
-      @page = Page.create(@key, {:title=>'Has Many Example', 'links:com.example.an/path'=>'Click now',
-                                 'links:com.google.www/search'=>'Search engine'})
+      @page = Page.create(@key,
+                          { :title=>'Has Many Example',
+                            :links => {
+                              'com.example.an/path' => 'Click now',
+                              'com.google.www/search'=>'Search engine' } } )
     end
     
     after do
@@ -95,7 +94,7 @@ describe Rhino::Cell do
     
     describe "when a model has_many of two things" do
       before do
-        @page.images.create_multiple('com.apple/logo.png'=>'Apple Logo', 'com.google/logo.png'=>'Google Logo')
+        @page.images << { 'com.apple/logo.png'=>'Apple Logo', 'com.google/logo.png'=>'Google Logo' }
       end
       
       it "should not confuse cells from different subclasses" do
@@ -114,7 +113,9 @@ describe Rhino::Cell do
       end
       
       it "should associate each cell with its actual row, even when two rows exist and point to two different cells" do
-        page2 = Page.create(@key, {:title=>'Test2', 'links:gov.change/path'=>'Click now'})
+        page2 = Page.create(@key,
+                            { :title=>'Test2',
+                              :links => { 'gov.change/path'=>'Click now' } } )
         link1 = @page.links.get('com.example.an/path')
         link2 = page2.links.get('gov.change/path')
         link1.page.should_not == link2.page
@@ -123,13 +124,15 @@ describe Rhino::Cell do
   
     describe "adding objects" do
       it "should allow a new cell to be added" do
-        @page.links.create('com.yahoo', "Yahoo")
+        @page.links << { 'com.yahoo' => "Yahoo" }
         the_link = @page.links.get('com.yahoo')
         the_link.contents.should == 'Yahoo'
       end
       
-      it "should save the row when 'create' is used" do
-        @page.links.create('com.yahoo', 'Yahoo')
+      it "should not save the row when 'create' is used" do
+        @page.links << { 'com.yahoo' => 'Yahoo' }
+        Page.get(@key).links.get('com.yahoo').should == nil
+        @page.save
         Page.get(@key).links.get('com.yahoo').contents.should == 'Yahoo'
       end
       
@@ -139,7 +142,7 @@ describe Rhino::Cell do
       end
       
       it "should allow multiple cells to be added by hash" do
-        @page.links.create_multiple('com.yahoo'=>'Yahoo', 'com.cisco'=>'Cisco')
+        @page.links << { 'com.yahoo'=>'Yahoo', 'com.cisco'=>'Cisco' }
         @page.links.get('com.yahoo').contents.should == 'Yahoo'
         @page.links.get('com.cisco').contents.should == 'Cisco'
       end
@@ -159,13 +162,15 @@ describe Rhino::Cell do
       it "should allow deletion from the list of objects" do
         #'links:com.google.www/search'=>'Search engine'
         @page.links.get('com.google.www/search').contents.should == 'Search engine'
-        @page.links.get('com.google.www/search').destroy
+        @page.links.get('com.google.www/search').delete
         @page.links.get('com.google.www/search').should == nil
       end
       
-      it "should immediately commit deletes to the database" do
+      it "should commit deletes to the database only when saved" do
         @page.links.get('com.google.www/search').contents.should == 'Search engine'
-        @page.links.get('com.google.www/search').destroy
+        @page.links.get('com.google.www/search').delete
+        Page.get(@key).links.get('com.google.www/search').should_not == nil
+        @page.save        
         Page.get(@key).links.get('com.google.www/search').should == nil
       end
     end

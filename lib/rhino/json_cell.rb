@@ -31,7 +31,7 @@ module Rhino
   end
 
   JsonCell.class_eval do
-    include Aliases, Attributes
+    include Aliases, Attributes, AttrDefinitions
     
     include ActiveModel::Validations
     include ActiveModel::Serialization

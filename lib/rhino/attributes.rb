@@ -53,12 +53,13 @@ module Rhino
     def set_attribute(attr_name, value)
       debug("Attributes#set_attribute(#{attr_name.inspect}, #{value.inspect})")
       @data ||= {}
+      value = convert_attribute(attr_name, value) if respond_to?(:convert_attribute)
       @data[attr_name] = value
     end
     
     def get_attribute(attr_name)
-      debug("Attributes#get_attribute(#{attr_name.inspect}) => #{data[attr_name].inspect}")
       @data ||= {}
+      debug("Attributes#get_attribute(#{attr_name.inspect}) => #{data[attr_name].inspect}")
       @data[attr_name]
     end
     

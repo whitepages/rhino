@@ -59,13 +59,7 @@ module Rhino
     end
 
     def delete
-      row.delete_attribute(attr_name)
-    end
-    
-    # TODO: update to destroy the cell without re-saving the row
-    def destroy
-      delete
-      row.save
+      proxy.delete(self)
     end
     
     def self.belongs_to(containing_class_name)

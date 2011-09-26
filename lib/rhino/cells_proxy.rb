@@ -23,31 +23,6 @@ class Rhino::CellsProxy
     @column_family.column_names
   end
   
-  # Instantiate a new cell object pointing to this proxy's row.
-  def new_cell(key, contents)
-    cell_class.new(key, contents, self)
-  end
-  
-  def load_cell(key)
-    # consider nil values as nonexistent, because they could refer to cells that will be deleted on the next #save
-    # but haven't (a nil value is the marker that it will be deleted)
-    if val = @row.get_attribute("#{column_family_name}:#{key}")
-      new_cell(key, val)
-    else
-      return nil
-    end
-  end
-  
-  # Creates cells in the database from the specified <tt>keys_and_contents</tt>, which is a hash in the form:
-  #   {'com.yahoo'=>'Yahoo', 'com.apple.www'=>'Apple'}
-  # and saves the cells.
-  # Returns an array of the cell objects.
-  def create_multiple(keys_and_contents)
-    keys_and_contents.collect do |key,contents|
-      create(key, contents)
-    end
-  end
-  
   def first(*args)
     load_target unless loaded?
     @target.first(*args)
@@ -78,6 +53,8 @@ class Rhino::CellsProxy
       @target.find { |cell| yield cell }
     end    
   end
+  
+  alias_method( :get, :find )
   
   def select(pattern = nil)
     load_target unless loaded?
@@ -168,7 +145,7 @@ class Rhino::CellsProxy
   def <<(*cells)
     result = true
     load_target if @row.new_record?
-
+    
     transaction do
       flatten_deeper(cells).each do |cell_data|
         create_cells( cell_data ) do |cell|
@@ -190,8 +167,7 @@ class Rhino::CellsProxy
   def delete(*cells)
     remove_cells(cells) do |cells|
       cells.each do |cell|
-        puts "removing #{cell}"
-        cell.delete
+        @row.delete_attribute(cell.attr_name)
         @target.delete(cell)
       end
     end
@@ -203,8 +179,10 @@ class Rhino::CellsProxy
   
   def delete_if
     remove_cells(@target.select { |cell| yield cell } ) do |cells|
-      cells.each { |cell| cell.delete }
-      cells.each { |cell| @target.delete(cell) }
+      cells.each do |cell|
+        @row.delete_attribute(cell.attr_name)
+        @target.delete(cell)
+      end
     end
   end
 
@@ -291,7 +269,9 @@ class Rhino::CellsProxy
   # Array#flatten has problems with recursive arrays. Going one level
   # deeper solves the majority of the problems.
   def flatten_deeper(array)
-    array.collect { |element| (element.respond_to?(:flatten) && !element.is_a?(Hash)) ? element.flatten : element }.flatten
+    array.collect do
+      |element| (element.respond_to?(:flatten) && !element.is_a?(Hash)) ? element.flatten : element
+    end.flatten
   end
 
   def create_cells( cell_data )
@@ -305,6 +285,22 @@ class Rhino::CellsProxy
     end
   end
 
+  # Instantiate a new cell object pointing to this proxy's row.
+  def new_cell(key, contents)
+    cell_class.new(key, contents, self)
+  end
+  alias_method :create, :new_cell
+  
+  def load_cell(key)
+    # consider nil values as nonexistent, because they could refer to cells that will be deleted on the next #save
+    # but haven't (a nil value is the marker that it will be deleted)
+    if val = @row.get_attribute("#{column_family_name}:#{key}")
+      new_cell(key, val)
+    else
+      return nil
+    end
+  end
+  
   def callback( message, cell )
   end
 end

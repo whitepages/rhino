@@ -184,17 +184,17 @@ module Rhino
     def Model.table
       @table ||= Rhino::Model.adapter::Table.new(connection, table_name)
     end
-    
-    cattr_accessor :column_families
-    
+
+    class_attribute :column_families
+
     def Model.column_family(name)
       name = name.to_s.gsub(':','')
       self.column_families ||= []
-      if column_families.include?(name)
+      if self.column_families.include?(name)
         debug("column_family '#{name}' already defined for #{self.class.name}")
-        column_families.delete(name)
+        self.column_families.delete(name)
       end
-      column_families << name
+      self.column_families << name
       
       # also define Model#meta_columns and Model#meta_family methods for each column_family
       class_eval %Q{
@@ -300,7 +300,7 @@ module Rhino
   end
 
   Model.class_eval do
-    include Aliases, AttrNames, Attributes, Associations
+    include Aliases, AttrDefinitions, AttrNames, Attributes, Associations
     
     include ActiveModel::Validations
     include ActiveModel::Serialization

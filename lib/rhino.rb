@@ -7,8 +7,9 @@ require 'active_model'
 # cherry-pick ActiveSupport modules if we can (throws errors under rails 2.3)
 # only need Class.cattr_accessor from ActiveSupport
 require 'active_support/core_ext/string'
-require 'active_support/core_ext/array/extract_options.rb'
-require 'active_support/core_ext/class/attribute_accessors.rb'
+require 'active_support/core_ext/array/extract_options'
+require 'active_support/core_ext/class/attribute_accessors'
+require 'active_support/core_ext/class/attribute'
 require 'active_support/inflector'
 
 # class Array; include ActiveSupport::CoreExtensions::Array::ExtractOptions; end
@@ -33,6 +34,7 @@ require 'rhino/debug'
 require 'rhino/constraints'
 require 'rhino/associations'
 require 'rhino/attributes'
+require 'rhino/attr_definitions'
 require 'rhino/attr_names'
 require 'rhino/scanner'
 require 'rhino/aliases'

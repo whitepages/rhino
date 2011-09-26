@@ -1,12 +1,8 @@
 # -*- encoding: utf-8 -*-
-# lib = File.expand_path('lib/', __FILE__)
-# $:.unshift lib unless $:.include?(lib)
-#
-# require 'hbase_thift/version'
 
 # The library's version will always match the version of HBase that the thrift file came from.
 module Rhino
-  VERSION = "0.0.1"
+  VERSION = "0.1.0"
 end
 
 Gem::Specification.new do |s|
