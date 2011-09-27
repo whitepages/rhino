@@ -89,7 +89,11 @@ module Rhino
       # but we also want to invalidate the timestamp since saving the row will give it a new timestamp,
       # so this accomplishes both
       data.delete('timestamp')
-      self.class.table.put(key, data, with_timestamp)
+
+      output = {}
+      data.keys.each { |k| output[k] = save_attribute( k ) }
+
+      self.class.table.put(key, output, with_timestamp)
       if new_record?
         @opts[:new_record] = false
         @opts[:was_new_record] = true

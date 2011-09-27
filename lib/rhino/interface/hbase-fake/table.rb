@@ -29,6 +29,14 @@ module Rhino
         @hbase.delete_table( table_name )
         @rows = {}
       end
+
+      def exclude_column?(key, columns)
+        return false if columns.nil?
+        return false if columns.include?(key)
+        key = key.split(':', 2)[0] + ":"
+        return false if columns.include?(key)
+        return true
+      end
       
       def get(key, options = {})
         opts = DEFAULT_GET_OPTIONS.merge(options)
@@ -37,7 +45,8 @@ module Rhino
         raise(ArgumentError, "get requires a key") if key.nil? or key==''
       
         columns = Array(opts.delete(:columns)).compact
-
+        columns = nil if columns.empty?
+        
         timestamp = opts.delete(:timestamp)
         timestamp = timestamp.to_i if timestamp
 
@@ -46,21 +55,18 @@ module Rhino
           last_timestamp = if timestamp.nil?
                              older_timestamps.sort.last
                            else
-                             older_timestamps.delete_if { |old_timestamp| old_timestamp >= timestamp }
+                             older_timestamps.delete_if { |old_timestamp| old_timestamp > timestamp }
                              older_timestamps.sort.last
                            end
-          return @rows[key][last_timestamp][:current].merge( 'timestamp' => last_timestamp )
+          puts "RAWROW = #{@rows[key][last_timestamp].inspect}, columns = #{columns.inspect}"
+          output = @rows[key][last_timestamp][:current].
+            delete_if { |k, v| exclude_column?( k, columns ) }.
+            merge( 'timestamp' => last_timestamp )
+          puts "OUTPUT = #{output.inspect}"
+          return output
         rescue
           raise Rhino::Interface::Table::RowNotFound, "No row found in '#{table_name}' with key '#{key}'"
         end
-
-        debug("   => #{rowresult.inspect}")
-
-        return nil if rowresult[0].nil?
-        
-        # TODO: handle timestamps on a per-cell level
-        return prepare_rowresult(rowresult[0])
-
       end
       
       def scan(opts={})

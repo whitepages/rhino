@@ -44,9 +44,8 @@ module Rhino
       return if new_attributes.nil?
       attributes = new_attributes.dup
       attributes.stringify_keys!
-
       attributes.each do |k, v|
-        respond_to?(:"#{k}=") ? send(:"#{k}=", v) : raise(UnknownAttributeError, "unknown attribute: #{k}")
+        respond_to?(:"#{k}=") ? send(:"#{k}=", v) : raise(Rhino::UnknownAttribute, "unknown attribute: #{k}")
       end
     end
     
@@ -55,6 +54,14 @@ module Rhino
       @data ||= {}
       value = convert_attribute(attr_name, value) if respond_to?(:convert_attribute)
       @data[attr_name] = value
+    end
+
+    def save_attribute(attr_name)
+      value = @data[attr_name]
+      debug("Attributes#encode_attribute(#{attr_name.inspect}, #{value.inspect})")
+      return nil if value.nil?
+      value = encode_attribute(attr_name, value) if respond_to?(:convert_attribute)
+      value
     end
     
     def get_attribute(attr_name)

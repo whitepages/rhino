@@ -10,7 +10,9 @@ module Rhino
         @opts = opts
         @opts[:start_row] ||= ''
         #raise @opts[:columns].inspect
-
+        @get_opts = {}
+        @get_opts[:columns] = @opts[:columns] if @opts[:columns]
+        
         @scan_keys = htable.rows.keys.sort.select do |key|
           key >= @opts[:start_row] && ( @opts[:end_row].nil? || key <= @opts[:end_row] )
         end
@@ -22,7 +24,7 @@ module Rhino
         key = @scan_keys.shift
         return nil if key.nil?
 
-        row = @htable.get( key )
+        row = @htable.get( key, @get_opts )
         row['key'] = key
         return row
       end

@@ -8,6 +8,7 @@ end
 class InfoFamily < Rhino::ColumnFamily
   belongs_to :page
 
+  define_attribute :name,       :type => String
   define_attribute :crawl_date, :type => Date
   define_attribute :page_size,  :type => Integer
 end
@@ -15,33 +16,37 @@ end
 class ConstraintFamily < InfoFamily
   set_strict(true)
   
+  define_attribute :name,       :type => String
+  define_attribute :crawl_date, :type => Date
+  define_attribute :page_size,  :type => Integer
+
   validates_presence_of :crawl_date
   validates_length_of :name, :minimum => 5
 end
 
 class ColumnFamilyTest < Page
-  @table_name = 'page'
+  @table_name = 'cfpage'
 
   has_one :test_info, InfoFamily
 end
 
 class ConstraintFamilyTest < Page
-  @table_name = 'page'
+  @table_name = 'cfpage'
 
   has_one :test_info, ConstraintFamily
 end
 
 describe Rhino::Cell do
-  before do
-    Page.delete_table if Page.table_exists?
-    Page.create_table
-  end
-  
-  after do
-    Page.delete_table
-  end
-
   describe "when working with a has_one relationship" do
+    before do
+      ConstraintFamilyTest.delete_table if ConstraintFamilyTest.table_exists?
+      ConstraintFamilyTest.create_table
+    end
+    
+    after do
+      ConstraintFamilyTest.delete_table
+    end
+    
     it "should be able to create empty relations" do
 
       test = ColumnFamilyTest.create( 'page_0100',
@@ -67,14 +72,12 @@ describe Rhino::Cell do
       test.test_info.name.should == 'hi there'
     end
     
-end
-  if false
     it "should be able to create a full relation with hash" do
       today = Date.today
       
       test = ColumnFamilyTest.create( 'page_0101',
                                       :title => 'has one page',
-                                      :info => {
+                                      :test_info => {
                                         :name => 'Major Page',
                                         :crawl_date => today } )
       test.test_info.name.should == 'Major Page'
@@ -91,8 +94,8 @@ end
       
       test = ColumnFamilyTest.create( 'page_0102',
                                       :title => 'has one page',
-                                      :info => InfoFamily.new ( :name => 'Major Page',
-                                                                :crawl_date => today ) )
+                                      :test_info => InfoFamily.new ( :name => 'Major Page',
+                                                                     :crawl_date => today ) )
       test.test_info.name.should == 'Major Page'
       test.test_info.crawl_date.should === today
       
@@ -107,8 +110,8 @@ end
       
       test = ColumnFamilyTest.create( 'page_0103',
                                       :title => 'has one page',
-                                      :info => InfoFamily.new ( :name => 'Major Page',
-                                                                :crawl_date => today ) )
+                                      :test_info => InfoFamily.new ( :name => 'Major Page',
+                                                                     :crawl_date => today ) )
       test.test_info.name.should == 'Major Page'
       test.test_info.crawl_date.should === today
 
@@ -125,22 +128,24 @@ end
     end
 
     it "should be possible to set constraints on family attributes" do
+      today = Date.today
+      
       lambda do
         ConstraintFamilyTest.create( 'page_0104',
                                      :title => 'constraint page',
-                                     :info => {
+                                     :test_info => {
                                        :name => 'shrt',
                                        :crawl_date => today
                                      })
-      end.should raise ArgumentError
+      end.should raise_error Rhino::ConstraintViolation
 
       lambda do
         ConstraintFamilyTest.create( 'page_0105',
                                      :title => 'constraint page',
-                                     :info => {
+                                     :test_info => {
                                        :name => 'longer name'
                                      })
-      end.should raise ArgumentError
+      end.should raise_error Rhino::ConstraintViolation
       
       test = ConstraintFamilyTest.new( 'page_0106')
       test.title = 'constraint page'
@@ -149,19 +154,27 @@ end
 
       lambda do
         test.save
-      end.should raise ArgumentError
+      end.should raise_error Rhino::ConstraintViolation
 
       test = ConstraintFamilyTest.new( 'page_0106')
       test.title = 'constraint page'
       lambda do
         test.test_info.foo = 'bar'
-      end.should raise ArgumentError
+      end.should raise_error Rhino::UnexpectedAttribute
     end
     
   end
-end
-  if false
+
   describe "when working with a has_many relationship" do
+    
+    before do
+      Page.delete_table if Page.table_exists?
+      Page.create_table
+    end
+    
+    after do
+      Page.delete_table
+    end
     
     it "should be able to create empty relations" do
       page = Page.create( 'page_0001',

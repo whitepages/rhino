@@ -18,8 +18,8 @@ describe Rhino::Scanner do
   def column_data_of(rows)
     rows.collect do |row|
       row.data.delete('timestamp')
-      row.data
-    end
+      row.data.size == 0 ? nil : row.data
+    end.compact
   end
   
   describe "when getting all rows" do

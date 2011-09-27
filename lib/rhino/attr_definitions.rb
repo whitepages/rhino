@@ -28,13 +28,15 @@ module Rhino
         if !value.is_a?(type)
           begin
             if type == Integer
-            value = Integer(value)
+              value = Integer(value)
             elsif type == Float
               value = Float(value)
             elsif type == Date
               value = Date.parse(value)
             elsif type == DateTime
               value = DateTime.parse(value)
+            elsif type == Time
+              value = Time.parse(value)
             elsif type == Rhino::Boolean
               value = case value
                       when 't', 'true', '1', 'yes'
@@ -57,6 +59,13 @@ module Rhino
 
         return value
       end      
+    end
+
+    def encode_attribute( name, value )
+      if self.class.attr_definitions[ name.to_s ].nil?
+        raise UnexpectedAttribute, "Unexpected attribute #{name} for strict class #{self.class}" if strict?
+      end
+      return value.to_s
     end
     
     module ClassMethods
@@ -83,6 +92,7 @@ module Rhino
   end
   class TypeViolation < Exception; end
   class UnexpectedAttribute < Exception; end
+  class UnknownAttribute < Exception; end
 end
 
 class TrueClass; include Rhino::Boolean; end

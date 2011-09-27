@@ -55,7 +55,7 @@ describe Rhino::Model do
     end
   
     it "should record column families as defined" do
-      @table.column_families.should == %w(title contents links meta images)
+      @table.column_families.sort.should == %w(title contents links meta images).sort
     end
   end
 
@@ -325,7 +325,7 @@ describe Rhino::Model do
     end
     
     it "should have the same column families as the parent class" do
-      SpecialPage.column_families.should == ["title", "contents", "links", "meta", "images"]
+      SpecialPage.column_families.sort.should == ["title", "contents", "links", "meta", "images"].sort
     end
     
     it "should have the methods defined on the subclass" do

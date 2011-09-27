@@ -16,16 +16,14 @@ class Rhino::ColumnFamilyProxy
   def replace( other )
     @inner = case other
              when Hash
-               new_inner = options[:class].new( @row, @column_family_name )
-               new_inner.attributes = other
-               new_inner
-             when options[:class]
+               @options[:class].new( other )
+             when @options[:class]
                other
              else
                raise Rhino::TypeViolation, "Expected #{options[:class]} or Hash for replace"
              end
     @inner.row = @row
-    @inner.column_family_name = column_family_name
+    @inner.column_family_name = @column_family_name
   end
   
   def respond_to?( method )

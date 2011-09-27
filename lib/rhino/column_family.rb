@@ -40,7 +40,7 @@ module Rhino
 
     def load
       data = {}
-      row.column_family_keys(column_family_name).each do |full_name|
+      row.column_family_keys(@column_family_name).each do |full_name|
         data[ ColumnFamily.extract_attr_name(full_name) ] = row.get_attribute( full_name )
       end
       reset
@@ -72,9 +72,8 @@ module Rhino
     # Writes this column family's data to it's columns
     def write
       raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages}" if !self.valid?
-
       attributes.each do |name, value|
-        row.set_attribute("#{column_family_name}:#{attr_name}", value)
+        row.set_attribute("#{@column_family_name}:#{name}", value)
       end
     end
     alias_method :write_all, :write
@@ -84,7 +83,7 @@ module Rhino
     # family name removed, use +column_names+.
     #   row.column_full_names # => ['title:english', 'title:french', 'title:spanish']
     def column_full_names
-      attributes.keys.collect{ |key| "#{column_family_name}:#{key}"}
+      attributes.keys.collect{ |key| "#{@column_family_name}:#{key}"}
     end
     
     # Returns the name of the column not including the name of its family. If you want the full name of the column, including the column
