@@ -27,7 +27,13 @@ end
 class ColumnFamilyTest < Page
   @table_name = 'cfpage'
 
-  has_one :test_info, InfoFamily
+  has_one :test_info, :class => InfoFamily
+end
+
+class OptionalFamilyTest < Page
+  @table_name = 'cfpage'
+
+  has_one :test_info, :class => InfoFamily, :optional => true
 end
 
 class ConstraintFamilyTest < Page
@@ -59,7 +65,7 @@ describe Rhino::Cell do
       ColumnFamilyTest.find( 'page_0100' ).test_info.inner.should be_a InfoFamily
       ColumnFamilyTest.find( 'page_0100' ).test_info.attributes.size.should == 0
     end
-    
+
     it "should be possible to replace a relation with a hash" do
       pending
       test = ColumnFamilyTest.create( 'page_0100a',
@@ -70,6 +76,13 @@ describe Rhino::Cell do
       test.test_info.should_not == nil
       test.test_info.inner.should be_a InfoFamily
       test.test_info.name.should == 'hi there'
+    end
+    
+    it "should be able to create empty relations" do
+      test = OptionalFamilyTest.create( 'page_0100b',
+                                        :title => 'has one page' )
+      test.test_info.should == nil
+      OptionalFamilyTest.find( 'page_0100b' ).test_info.should == nil
     end
     
     it "should be able to create a full relation with hash" do

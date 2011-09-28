@@ -134,7 +134,8 @@ module Rhino
     end
     
     def column_family_keys( column_family )
-      data.keys.select { |k| k.match(/^#{Regexp.escape(column_family)}/)}
+      @data ||= {}
+      @data.keys.select { |k| k.match(/^#{Regexp.escape(column_family)}/)}
     end
     
     private

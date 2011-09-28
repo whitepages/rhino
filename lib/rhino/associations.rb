@@ -32,22 +32,43 @@ module Rhino
       end
 
       def collection_reader_method(name, options, association_proxy_class)
+        define_method("create_#{name}") do |*params|
+          force_create = params.first unless params.empty?
+          force_create ||= false
+          
+          association = association_proxy_class.new(self, name, options)
+
+          if association.empty? &&
+              !force_create &&
+              options[:optional] == true
+            return nil
+          end
+
+          association_instance_set(name, association)
+          association
+        end
+        
         define_method(name) do |*params|
           force_reload = params.first unless params.empty?
           association = association_instance_get(name)
-          
-          unless association
-            association = association_proxy_class.new(self, name, options)
-            association_instance_set(name, association)
-          end
-          
+
+          association = send("create_#{name}") if association.nil?
+          return nil if association.nil?
+
           association.reload if force_reload        
           association
         end      
 
         validates_each name do | record, attr, value |
           association = record.send(name)
-          record.errors.add attr, association.errors if !association.valid?
+          if !association.nil? && !association.valid?
+            case association.errors
+            when String
+              record.errors.add attr, association.errors
+            else
+              record.errors.add attr, association.errors.full_messages.join(", ")
+            end
+          end
         end
         
       end
@@ -59,6 +80,7 @@ module Rhino
           define_method("#{name}=") do |new_value|
             # Loads proxy class instance (defined in collection_reader_method) if not already loaded
             association = send(name)
+            association = send("create_#{name}", true) if association.nil?
             association.replace(new_value)
             association
           end

@@ -138,6 +138,11 @@ class Rhino::CellsProxy
     @target = target
     loaded
   end
+
+  def empty?
+    load_target unless loaded?
+    @target.empty?
+  end
   
   # Add +cells+ to this association.  Returns +self+ so method calls may be chained.  
   # Since << flattens its argument list and inserts each record, +push+ and +concat+ behave identically.

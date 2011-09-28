@@ -58,6 +58,11 @@ module Rhino
     # Has the \data been already \loaded?
     def loaded?
       @loaded
+    end  
+    
+    def empty?
+      load_target unless loaded?
+      @data.empty?
     end
     
     def initialize(data = {} )
@@ -97,9 +102,6 @@ module Rhino
       @data
     end
 
-    def loaded?
-    end
-    
     def self.belongs_to(containing_class_name)
       debug("#{self.class.name} belongs_to #{containing_class_name}")
       # for the Page example, this would define Cell#page
