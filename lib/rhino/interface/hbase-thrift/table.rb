@@ -53,19 +53,19 @@ module Rhino
                         # ignoring the timestamp that gets pass in for this version of the method
                         #
                         # hbase.getRowsTs(table_name, rowkeys, timestamp + 1)
-                        rowskeys.collect { |rowkey| hbase.getRowsTs(table_name, rowkey, timestamp + 1) }
+                        rowkeys.collect { |rowkey| hbase.getRowTs(table_name, rowkey, timestamp + 1) }.flatten
                       else
                         hbase.getRows(table_name, rowkeys)
                       end
         rescue Apache::Hadoop::Hbase::Thrift::IOError => e
-          raise Rhino::Interface::Table::TableNotFound, "Table '#{table_name}' not found while looking for key '#{key}'" if !exists?
+          raise Rhino::Interface::Table::TableNotFound, "Table '#{table_name}' not found while looking for key '#{rowkeys.inspect}'" if !exists?
           raise e
         end
         
         debug("   => #{rowresult.inspect}")
 
         if rowresult.nil? || rowresult[0].nil?
-          raise Rhino::Interface::Table::RowNotFound, "No row found in '#{table_name}' with key '#{key}'"
+          raise Rhino::Interface::Table::RowNotFound, "No row found in '#{table_name}' with key '#{rowkeys}'"
         end
         
         # TODO: handle timestamps on a per-cell level

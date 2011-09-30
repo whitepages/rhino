@@ -291,10 +291,18 @@ module Rhino
     def Model.scan(opts={})
       Rhino::Scanner.new(self, opts)
     end
+
+    def Model.get(rowkey, opts = {})
+      output = self.find_all( rowkey, opts )
+      return nil if output.nil?
+
+      return output[0]
+    end
     
-    def Model.get(*rowkeys)
+    def Model.find_all(*rowkeys)
       get_opts = rowkeys.extract_options!
-      
+      rowkeys.flatten!      
+
       debug("Model.get(#{rowkeys.inspect}, #{get_opts.inspect})")
       
       # handle opts
@@ -314,7 +322,6 @@ module Rhino
         rowkeys.each_with_index do |key, ii|
           output << load( key, data[ii] )
         end
-        return output[0] if output.size == 1
         return output
       rescue Rhino::Interface::Table::RowNotFound
         return nil
