@@ -25,6 +25,11 @@ module Rhino
       data
     end
     
+    def JsonCell.is_valid_attr_name?(attr_name)
+      return false if attr_name.nil? or attr_name == "" or attr_name.include?(':')
+      return true
+    end
+
     def JsonCell.determine_attribute_name(attr_name)
       attr_name
     end
