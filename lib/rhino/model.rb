@@ -292,8 +292,10 @@ module Rhino
       Rhino::Scanner.new(self, opts)
     end
     
-    def Model.get(key, get_opts={})
-      debug("Model.get(#{key.inspect}, #{get_opts.inspect})")
+    def Model.get(*rowkeys)
+      get_opts = rowkeys.extract_options!
+      
+      debug("Model.get(#{rowkeys.inspect}, #{get_opts.inspect})")
       
       # handle opts
       get_opts.keys.each { |fo_key| raise ArgumentError, "invalid key for get opts: #{fo_key.inspect}" unless %w(columns timestamp).include?(fo_key.to_s) }
@@ -302,9 +304,18 @@ module Rhino
       
       # get the row
       begin
-        data = table.get(key, :timestamp=>timestamp)
-        debug("-> found [key=#{key.inspect}, data=#{data.inspect}]")
-        load(key, data)
+        args = rowkeys.clone
+        args << { :timestamp => timestamp }
+        
+        data = table.get( *args )
+        debug("-> found [key=#{rowkeys.inspect}, data=#{data.inspect}]")
+
+        output = []
+        rowkeys.each_with_index do |key, ii|
+          output << load( key, data[ii] )
+        end
+        return output[0] if output.size == 1
+        return output
       rescue Rhino::Interface::Table::RowNotFound
         return nil
       end

@@ -38,11 +38,12 @@ module Rhino
         return true
       end
       
-      def get(key, options = {})
-        opts = DEFAULT_GET_OPTIONS.merge(options)
-        debug("#{self.class.name}#get(#{key.inspect}, #{options.inspect})")
+      def get(*rowkeys)
+        opts = rowkeys.extract_options!
+        opts = DEFAULT_GET_OPTIONS.merge(opts)
+        debug("#{self.class.name}#get(#{rowkeys.inspect}, #{opts.inspect})")
         
-        raise(ArgumentError, "get requires a key") if key.nil? or key==''
+        raise(ArgumentError, "get requires a key") if rowkeys.nil? or rowkeys.empty? or rowkeys[0]==''
       
         columns = Array(opts.delete(:columns)).compact
         columns = nil if columns.empty?
@@ -50,23 +51,24 @@ module Rhino
         timestamp = opts.delete(:timestamp)
         timestamp = timestamp.to_i if timestamp
 
-        begin
-          older_timestamps = @rows[key].keys.sort
-          last_timestamp = if timestamp.nil?
-                             older_timestamps.sort.last
-                           else
-                             older_timestamps.delete_if { |old_timestamp| old_timestamp > timestamp }
-                             older_timestamps.sort.last
-                           end
-          puts "RAWROW = #{@rows[key][last_timestamp].inspect}, columns = #{columns.inspect}"
-          output = @rows[key][last_timestamp][:current].
-            delete_if { |k, v| exclude_column?( k, columns ) }.
-            merge( 'timestamp' => last_timestamp )
-          puts "OUTPUT = #{output.inspect}"
-          return output
-        rescue
-          raise Rhino::Interface::Table::RowNotFound, "No row found in '#{table_name}' with key '#{key}'"
+        output = []
+        rowkeys.each do |key|
+          begin
+            older_timestamps = @rows[key].keys.sort
+            last_timestamp = if timestamp.nil?
+                               older_timestamps.sort.last
+                             else
+                               older_timestamps.delete_if { |old_timestamp| old_timestamp > timestamp }
+                               older_timestamps.sort.last
+                             end
+            output << @rows[key][last_timestamp][:current].
+              delete_if { |k, v| exclude_column?( k, columns ) }.
+              merge( 'timestamp' => last_timestamp )
+          rescue
+            raise Rhino::Interface::Table::RowNotFound, "No row found in '#{table_name}' with key '#{key}'"
+          end
         end
+        return output
       end
       
       def scan(opts={})

@@ -34,11 +34,13 @@ module Rhino
         @hbase.deleteTable( table_name )
       end
       
-      def get(key, options = {})
-        opts = DEFAULT_GET_OPTIONS.merge(options)
-        debug("#{self.class.name}#get(#{key.inspect}, #{options.inspect})")
+      def get(*rowkeys)
+        opts = rowkeys.extract_options!
+        opts = DEFAULT_GET_OPTIONS.merge(opts)
+
+        debug("#{self.class.name}#get(#{rowkeys.inspect}, #{opts.inspect})")
         
-        raise(ArgumentError, "get requires a key") if key.nil? or key==''
+        raise(ArgumentError, "get requires a key") if rowkeys.nil? or rowkeys.empty? or rowkeys[0]==''
       
         columns = Array(opts.delete(:columns)).compact
 
@@ -47,9 +49,13 @@ module Rhino
 
         begin
           rowresult = if timestamp
-                        hbase.getRowTs(table_name, key, timestamp + 1)
+                        # This appears to be a bug in the HBase thrift interface. It is apparently
+                        # ignoring the timestamp that gets pass in for this version of the method
+                        #
+                        # hbase.getRowsTs(table_name, rowkeys, timestamp + 1)
+                        rowskeys.collect { |rowkey| hbase.getRowsTs(table_name, rowkey, timestamp + 1) }
                       else
-                        hbase.getRow(table_name, key)
+                        hbase.getRows(table_name, rowkeys)
                       end
         rescue Apache::Hadoop::Hbase::Thrift::IOError => e
           raise Rhino::Interface::Table::TableNotFound, "Table '#{table_name}' not found while looking for key '#{key}'" if !exists?
@@ -63,8 +69,7 @@ module Rhino
         end
         
         # TODO: handle timestamps on a per-cell level
-        return prepare_rowresult(rowresult[0])
-
+        return rowresult.collect { |row| prepare_rowresult(row) }
       end
       
       def scan(opts={})
