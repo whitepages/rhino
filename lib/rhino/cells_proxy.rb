@@ -32,18 +32,13 @@ class Rhino::CellsProxy
     @target.last(*args)
   end
 
-  def [](index)
-    load_target unless loaded?
-    @target[index]
-  end
-
   def find(pattern = nil)
     load_target unless loaded?
     if pattern
       @target.find do |cell|
         case pattern
-        when String
-          cell.key == pattern
+        when String, Symbol
+          cell.key == pattern.to_s
         when Regexp
           cell.key.match( pattern )
         end
@@ -191,9 +186,13 @@ class Rhino::CellsProxy
   end
 
   def replace( other_array )
-    # convert the association in hash form with key => contents to an array of cells
-    other_array = other_array.collect { |key, val| new_cell( key, val ) } if other_array.is_a?(Hash)
-
+    if other_array.is_a?(Hash)
+      other_array.stringify_keys!
+    
+      # convert the association in hash form with key => contents to an array of cells
+      other_array = other_array.collect { |key, val| new_cell( key, val ) }
+    end
+    
     load_target
     other   = other_array.size < 100 ? other_array : other_array.to_set
     current = @target.size < 100 ? @target : @target.to_set

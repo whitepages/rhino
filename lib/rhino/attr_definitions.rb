@@ -25,27 +25,27 @@ module Rhino
       else
         type = self.class.attr_definitions[ name.to_s ][:type] || String
 
-        if !value.is_a?(type)
+        if !value.nil? && !value.is_a?(type)
           begin
             if type == Integer
-              value = Integer(value)
+              value = value.empty? ? nil : Integer(value)
             elsif type == Float
-              value = Float(value)
+              value = value.empty? ? nil : Float(value)
             elsif type == Date
-              value = Date.parse(value)
+              value = value.empty? ? nil : Date.parse(value)
             elsif type == DateTime
-              value = DateTime.parse(value)
+              value = value.empty? ? nil : DateTime.parse(value)
             elsif type == Time
-              value = Time.parse(value)
+              value = value.empty? ? nil : Time.parse(value)
             elsif type == Rhino::Boolean
-              value = case value
-                      when 't', 'true', '1', 'yes'
-                      true
-                      when 'f', 'false', '0', 'no'
-                        false
-                      else
-                        raise ArgumentError
-                      end
+              value = value.empty? ? nil : case value
+                                           when 't', 'true', '1', 'yes'
+                                             true
+                                           when 'f', 'false', '0', 'no'
+                                             false
+                                           else
+                                             raise ArgumentError
+                                           end
             elsif type == String
               value = value.to_s
             end
@@ -53,7 +53,7 @@ module Rhino
             raise Rhino::TypeViolation, "Error converting #{value} to #{type} for field #{name}"
           end  
         end
-        if !value.is_a?( type )
+        if !value.is_a?( type ) && !value.nil?
           raise TypeViolation, "Invalid type  #{value.class} on attribute #{name} of class #{self.class} expected #{type}"
         end
 
