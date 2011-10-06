@@ -32,8 +32,14 @@ class Rhino::CellsProxy
     @target.last(*args)
   end
 
+  def [](index)
+    find( index )
+  end
+
   def find(pattern = nil)
     load_target unless loaded?
+    return @target[pattern] if pattern.is_a?(Integer)
+    
     if pattern
       @target.find do |cell|
         case pattern
