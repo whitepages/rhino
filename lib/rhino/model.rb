@@ -338,7 +338,8 @@ module Rhino
   end
 
   Model.class_eval do
-    include Aliases, AttrDefinitions, AttrNames, Attributes, Associations
+    include Aliases, AttrDefinitions, AttrNames, Attributes, Associations, MergedAssociations
+
     
     include ActiveModel::Validations
     include ActiveModel::Serialization

@@ -19,7 +19,8 @@ class Rhino::CellsProxy
   end
   
   def keys
-    row.column_family_keys(@column_family_name).collect { |k| Rhino::ColumnFamily.extract_attr_name(k) }
+    load_target unless loaded?
+    @target.collect{ |c| c.key }
   end
   
   def first(*args)
@@ -44,9 +45,9 @@ class Rhino::CellsProxy
       @target.find do |cell|
         case pattern
         when String, Symbol
-          cell.key == pattern.to_s
+          cell.key.to_s == pattern.to_s
         when Regexp
-          cell.key.match( pattern )
+          cell.key.to_s.match( pattern )
         end
       end
     else
@@ -103,7 +104,8 @@ class Rhino::CellsProxy
     return nil unless defined?(@loaded)
     
     if !loaded? and (!@row.new_record?)
-      @target = keys.collect { |key| load_cell(key) }
+      cols = row.column_family_keys(@column_family_name).collect { |k| Rhino::ColumnFamily.extract_attr_name(k) }
+      @target = cols.collect { |key| load_cell(key) }
     end
     
     @loaded = true
@@ -228,9 +230,12 @@ class Rhino::CellsProxy
   end
   
   def write_all
+    opts = {}
+    opts[:validate] = @options[:validate] if @options[:validate] != nil
+    
     transaction do
       @target.each do |target|
-        target.write
+        target.write(opts)
       end
     end
   end

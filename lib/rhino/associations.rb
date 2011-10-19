@@ -59,14 +59,16 @@ module Rhino
           association
         end      
 
-        validates_each name do | record, attr, value |
-          association = record.send(name)
-          if !association.nil? && !association.valid?
-            case association.errors
-            when String
-              record.errors.add attr, association.errors
-            else
-              record.errors.add attr, association.errors.full_messages.join(", ")
+        if options[:validate] != false
+          validates_each name do | record, attr, value |
+            association = record.send(name)
+            if !association.nil? && !association.valid?
+              case association.errors
+              when String
+                record.errors.add attr, association.errors
+              else
+                record.errors.add attr, association.errors.full_messages.join(", ")
+              end
             end
           end
         end

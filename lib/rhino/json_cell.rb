@@ -9,8 +9,10 @@ module Rhino
     end
 
     # Writes this cell's key and contents to its row object, but does not save this cell.
-    def write
-      raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages}" if !self.valid?
+    def write(options = {})
+      if options[:validate] != false
+        raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages}" if !self.valid?
+      end
       
       row.set_attribute(attr_name, self.to_json)
     end    
@@ -32,6 +34,18 @@ module Rhino
 
     def JsonCell.determine_attribute_name(attr_name)
       attr_name
+    end
+
+    def deep_clone
+      self.class.new( self.key, self.attributes )
+    end
+    
+    def merge_cell(cell)
+      return deep_clone if cell.nil?
+      
+      new_cell = self.clone
+      new_cell.attributes = cell.attributes
+      new_cell
     end
   end
 
