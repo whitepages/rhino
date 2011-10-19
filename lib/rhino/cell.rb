@@ -46,8 +46,10 @@ module Rhino
     end
     
     # Writes this cell's key and contents to its row object, but does not save this cell.
-    def write
-      raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages}" if !self.valid?
+    def write(options = {})
+      if options[:validate] != false
+        raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages}" if !self.valid?
+      end
       
       row.set_attribute(attr_name, contents)
     end
