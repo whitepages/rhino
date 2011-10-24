@@ -243,9 +243,12 @@ class Rhino::CellsProxy
   
   private
   def add_cell_to_target_with_callbacks(cell)
+    opts = {}
+    opts[:validate] = @options[:validate] if @options[:validate] != nil
+
     callback(:before_add, cell)
     cell.proxy = self
-    cell.write if ! @row.new_record?
+    cell.write(opts) if ! @row.new_record?
     yield(cell) if block_given?
     @target ||= [] unless loaded?
     @target << cell unless @options[:uniq] && @target.include?(cell)
