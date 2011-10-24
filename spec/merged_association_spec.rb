@@ -19,12 +19,12 @@ class Alpha < Rhino::Model
 end
 
 describe Rhino::MergedAssociations do
-  before do
+  before(:all) do
     Alpha.delete_table if Alpha.table_exists?
     Alpha.create_table
   end
   
-  after do
+  after(:all) do
     Alpha.delete_table
   end
   
@@ -155,6 +155,14 @@ describe Rhino::MergedAssociations do
   end
 
   it "should not able to make changes to merged associations" do
+    d_now = Date.today
+    dt_now = DateTime.now
+    t_now = Time.now
+
+    d_then = d_now + 5
+    dt_then = dt_now + 5
+    t_then = t_now + 5
+
     alpha = Alpha.new( 'a1',
                        :betas => {
                          :b1 => {
