@@ -1,9 +1,10 @@
-require 'spec'
-require 'spec/rake/spectask'
+require 'rspec'
+require 'rspec/core/rake_task'
 
-
-desc "Run the specs under spec/"
-Spec::Rake::SpecTask.new do |t|
-  t.spec_opts = ['--colour', "--format", 'profile', '--diff']
-  t.spec_files = FileList['spec/**/*_spec.rb']
+desc "Run specs"
+RSpec::Core::RakeTask.new do |t|
+  # don't run the interface specs together
+  t.pattern = "./spec/*_spec.rb"
+  # Put spec opts in a file named .rspec in root
 end
+
