@@ -80,7 +80,7 @@ module Rhino
     def save(with_timestamp=nil)
       debug("Model#save() [key=#{key.inspect}, data=#{data.inspect}, timestamp=#{timestamp.inspect}]")
 
-      raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages}" if !self.valid?
+      raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages.join("\n")}" if !self.valid?
 
       write_all_associations
       
@@ -252,9 +252,9 @@ module Rhino
       new(key, data, {:new_record=>false})
     end
     
-    def Model.create(key, data={})
-      obj = new(key, data)
-      obj.save(data[:timestamp])
+    def Model.create(key, data={}, opts={})
+      obj = new(key, data, opts)
+      obj.save(opts[:timestamp])
       obj
     end
 
@@ -320,7 +320,7 @@ module Rhino
 
         output = []
         rowkeys.each_with_index do |key, ii|
-          output << load( key, data[ii] )
+          output << load( key, data[ii] ) if !data[ii].nil?
         end
         return output
       rescue Rhino::Interface::Table::RowNotFound
