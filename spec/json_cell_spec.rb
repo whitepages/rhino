@@ -1,12 +1,12 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
 
 describe Rhino::JsonCell do
-  before do
+  before(:all) do
     Recipe.delete_table if Recipe.table_exists?
     Recipe.create_table
   end
   
-  after do
+  after(:all) do
     Recipe.delete_table
   end
 

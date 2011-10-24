@@ -1,7 +1,10 @@
 require 'spec/spec_helper.rb'
 
 describe Rhino::Interface::Scanner do
-  before do
+  before(:all) do
+    Page.delete_table if Page.table_exists?
+    Page.create_table
+
     @page_table = Page.table
     @page_table.put('com.apple', {'title:'=>'apple'})
     @page_table.put('com.google', {'title:'=>'google'})
@@ -9,8 +12,9 @@ describe Rhino::Interface::Scanner do
     @page_table.put('com.yahoo', {'title:'=>'yahoo'})
   end
   
-  after do
+  after(:all) do
     @page_table.delete_all_rows
+    Page.delete_table
   end
   
   describe "scanning all rows" do

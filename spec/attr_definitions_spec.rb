@@ -24,12 +24,12 @@ class AttrDefns < Rhino::Model
 end
 
 describe Rhino::AttrDefinitions do
-  before do
+  before(:all) do
     AttrDefns.delete_table if AttrDefns.table_exists?
     AttrDefns.create_table
   end
   
-  after do
+  after(:all) do
     AttrDefns.delete_table
   end
 

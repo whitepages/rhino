@@ -2,27 +2,27 @@ require File.dirname(__FILE__) + '/spec_helper.rb'
 # TODO: get real fixtures!!
 
 describe Rhino::Model do
-  before do
+  before(:all) do
     Page.delete_table if Page.table_exists?
     Page.create_table
   end
   
-  after do
+  after(:all) do
     Page.delete_table
   end
 
   describe "really simple sanity test" do
     before do
-      now = (Time.now.to_f * 1000).to_i
-      @a_while_ago = now - 1000
-      @even_longer_ago = now - 30000
+      @now = (Time.now.to_f * 1000).to_i
+      @a_while_ago = @now - 1000
+      @even_longer_ago = @now - 30000
     end
     
     it "NERD" do
       key = 'google.com'
-      p0 = Page.create(key, { :title => 'foo', "contents:gamma" => "3"})
-      p1 = Page.create(key, { :title => 'bar', "contents:beta" => "2", :timestamp=>@a_while_ago})
-      p2 = Page.create(key, { :title => 'foo bar', "contents:alpha" => '1', :timestamp=>@even_longer_ago})
+      p0 = Page.create(key, { :title => 'foo', "contents:gamma" => "3" }, {:timestamp => @now})
+      p1 = Page.create(key, { :title => 'bar', "contents:beta" => "2" }, {:timestamp=>@a_while_ago})
+      p2 = Page.create(key, { :title => 'foo bar', "contents:alpha" => '1' }, {:timestamp=>@even_longer_ago})
 
       pX = Page.get( key )
       pX.get_attribute("contents:gamma").should == '3'
@@ -55,7 +55,7 @@ describe Rhino::Model do
     end
   
     it "should record column families as defined" do
-      @table.column_families.sort.should == %w(title contents links meta images).sort
+      %w(title contents links meta images).each { |cf| @table.column_families.should include cf }
     end
   end
 
@@ -260,8 +260,8 @@ describe Rhino::Model do
   
     it "should save and retrieve a row by timestamp" do
       key = 'google.com'
-      p1 = Page.create(key, {:title=>'google a while ago', :timestamp=>@a_while_ago})
-      p2 = Page.create(key, {:title=>'google even longer ago', :timestamp=>@even_longer_ago})
+      p1 = Page.create(key, {:title=>'google a while ago' }, {:timestamp=>@a_while_ago})
+      p2 = Page.create(key, {:title=>'google even longer ago' }, {:timestamp=>@even_longer_ago})
       Page.get(key, :timestamp=>@a_while_ago).title.should == 'google a while ago'
       Page.get(key, :timestamp=>@even_longer_ago).title.should == 'google even longer ago'
     end
@@ -325,7 +325,7 @@ describe Rhino::Model do
     end
     
     it "should have the same column families as the parent class" do
-      SpecialPage.column_families.sort.should == ["title", "contents", "links", "meta", "images"].sort
+      %w(title contents links meta images).each { |cf| SpecialPage.column_families.should include cf }
     end
     
     it "should have the methods defined on the subclass" do

@@ -2,14 +2,14 @@ require 'spec/spec_helper.rb'
 
 # TODO these tests should not be dependent on Rhino::Model (Page is a subclass of Model)
 describe Rhino::Interface::Table do
-  before do
+  before(:all) do
     Page.delete_table if Page.table_exists?
     Page.create_table
 
     @page_table = Page.table
   end
   
-  after do
+  after(:all) do
     @page_table.delete_all_rows
     Page.delete_table
   end

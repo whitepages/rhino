@@ -1,12 +1,12 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
 
 describe Rhino::Cell do
-  before do
+  before(:all) do
     Page.delete_table if Page.table_exists?
     Page.create_table
   end
   
-  after do
+  after(:all) do
     Page.delete_table
   end
 

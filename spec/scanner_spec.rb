@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
 
 describe Rhino::Scanner do
-  before do
+  before(:all) do
     Page.delete_table if Page.table_exists?
     Page.create_table
     @p1 = Page.create('com.example', :title=>'example')
@@ -10,7 +10,7 @@ describe Rhino::Scanner do
     @p4 = Page.create('com.yahoo', :title=>'Yahoo')
   end
 
-  after do
+  after(:all) do
     Page.table.delete_all_rows
     Page.delete_table
   end
