@@ -65,7 +65,7 @@ module Rhino
             if !association.nil? && !association.valid?
               case association.errors
               when String
-                record.errors.add attr, association.errors
+                record.errors.add attr, association.errors.split("\n").collect{|s| "#{s} in assocation #{name}\n" }.join("")
               else
                 record.errors.add attr, association.errors.full_messages.join(", ")
               end
