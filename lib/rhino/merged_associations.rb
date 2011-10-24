@@ -32,7 +32,7 @@ module Rhino
         raise MergedAssociationViolation, "Cannot modify merged associations"
       end
 
-      def replace
+      def replace(*cells)
         raise MergedAssociationViolation, "Cannot modify merged associations"
       end
 
