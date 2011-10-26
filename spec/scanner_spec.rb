@@ -17,31 +17,31 @@ describe Rhino::Scanner do
     Page.table.delete_all_rows
     Page.delete_table
   end
-  
+
   def column_data_of(rows)
     rows.collect do |row|
       row.data.delete('timestamp')
       row.data.size == 0 ? nil : row.data
     end.compact
   end
-  
+
   describe "when getting all rows" do
     before do
       @all_pages = Page.get_all
     end
-    
+
     it "should return all rows" do
       column_data_of(@all_pages).should == column_data_of([@p1, @p2, @p3, @p4, @p5, @p6, @p7])
     end
   end
-  
+
   describe "when scanning all rows" do
     it "should return all rows" do
       column_data_of(Page.scan.collect).should == column_data_of([@p1, @p2, @p3, @p4, @p5, @p6, @p7])
     end
   end
-  
-  describe "when scanning with a start row specified" do    
+
+  describe "when scanning with a start row specified" do
     it "should show rows including and after the start row" do
       column_data_of(Page.scan(:start_row=>'com.google').collect).should == column_data_of([@p2, @p3, @p4, @p5, @p6, @p7])
     end
@@ -67,7 +67,6 @@ describe Rhino::Scanner do
 
   describe "when scanning for a particular key prefix" do
     it "should return all rows with that prefix" do
-debugger
       column_data_of(Page.scan(:starts_with_prefix =>'org.apache').collect).should == column_data_of([@p5, @p6, @p7])
     end
   end

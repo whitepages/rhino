@@ -10,10 +10,10 @@ module Rhino
         @table_name = table_name
         @opts = opts
       end
-      
+
       def column_families
       end
-      
+
       DEFAULT_GET_OPTIONS = {:timestamp => nil, :columns => nil}
 
       def create_table(column_families)
@@ -24,7 +24,7 @@ module Rhino
       def exists?
         @hbase.table_names.include?( table_name )
       end
-      
+
       def delete_table
         @hbase.delete_table( table_name )
         @rows = {}
@@ -37,17 +37,17 @@ module Rhino
         return false if columns.include?(key)
         return true
       end
-      
+
       def get(*rowkeys)
         opts = rowkeys.extract_options!
         opts = DEFAULT_GET_OPTIONS.merge(opts)
         debug("#{self.class.name}#get(#{rowkeys.inspect}, #{opts.inspect})")
-        
+
         raise(ArgumentError, "get requires a key") if rowkeys.nil? or rowkeys.empty? or rowkeys[0]==''
-      
+
         columns = Array(opts.delete(:columns)).compact
         columns = nil if columns.empty?
-        
+
         timestamp = opts.delete(:timestamp)
         timestamp = timestamp.to_i if timestamp
 
@@ -61,7 +61,10 @@ module Rhino
                                older_timestamps.delete_if { |old_timestamp| old_timestamp > timestamp }
                                older_timestamps.sort.last
                              end
-            output << @rows[key][last_timestamp][:current].
+
+            current = @rows[key][last_timestamp][:current]
+            current = merge_current(current, @rows[key][last_timestamp][:mutations])
+            output << current.
               delete_if { |k, v| exclude_column?( k, columns ) }.
               merge( 'timestamp' => last_timestamp )
           rescue
@@ -70,11 +73,11 @@ module Rhino
         end
         return output
       end
-      
+
       def scan(opts={})
         Rhino::HBaseFakeInterface::Scanner.new(self, opts)
       end
-      
+
       def put(key, data, timestamp=nil)
         timestamp = (Time.now.to_f * 1000).to_i if timestamp.nil?
         timestamp = timestamp.to_i
@@ -89,7 +92,7 @@ module Rhino
         older_timestamps = @rows[key].keys.sort
         older_timestamps.delete_if { |timestamp| timestamp >= timestamp }
         last_time = older_timestamps.last
-        
+
         timestamps.each do |timestamp|
           current = {}
           current = @rows[key][last_time][:current] if @rows[key][last_time]
@@ -97,12 +100,12 @@ module Rhino
           last_time = timestamp
         end
       end
-      
+
       # Deletes the row at +key+ from the table.
       def delete_row(key)
         @rows[key] = nil
       end
-      
+
       # Deletes all of the rows in a table.
       def delete_all_rows
         scan.each do |row|
@@ -121,7 +124,7 @@ module Rhino
         current ||= {}
         current.merge( mutations ).delete_if {|key, val| val.nil?}
       end
-      
+
     end
   end
 end
