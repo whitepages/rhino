@@ -14,7 +14,11 @@ module Rhino
         @get_opts[:columns] = @opts[:columns] if @opts[:columns]
         
         @scan_keys = htable.rows.keys.sort.select do |key|
-          key >= @opts[:start_row] && ( @opts[:end_row].nil? || key <= @opts[:end_row] )
+          if (@opts[:starts_with_prefix])
+            key.start_with?(@opts[:starts_with_prefix])
+          else
+            key >= @opts[:start_row] && ( @opts[:end_row].nil? || key <= @opts[:end_row] )
+          end
         end
       end
       
