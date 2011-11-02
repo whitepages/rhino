@@ -332,4 +332,53 @@ describe Rhino::Model do
       SpecialPage.new('somespecialpage').special?.should == true
     end
   end
+
+  describe "when using secondary tables" do
+    before(:all) do
+      # create table1
+      # create table2
+    end
+
+    after(:all) do
+      # cleanup table1
+      # cleanup table2
+    end
+
+    it "should be able to load from two tables including original" do
+    end
+
+    it "should be able to not find a record that isnt in either table" do
+    end
+
+    it "should be able to handle the record not existing in one table" do
+    end
+
+    it "should be able to handle merging all data types" do
+    end
+  end
+
+  describe "when filtering columns for save" do
+    it "should be able to list columns to include" do
+    end
+
+    it "should be able to list column families to include" do
+    end
+
+    it "should be able to list columns to include using a regular expression" do
+    end
+    
+    it "should be able to list columns to exclude" do
+    end
+
+    it "should be able to list column families to exclude" do
+    end
+
+    it "should be able to list columns to exclude using a regular expression" do
+    end    
+
+    it "should be able to include a column family and exclude a member of the family" do
+    end
+
+  end
+  
 end

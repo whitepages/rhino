@@ -2,7 +2,7 @@ require "rubygems"
 require "rspec"
 require File.expand_path(File.dirname(__FILE__) + "/../lib/rhino")
 
-Rhino::Debug.enable_debug
+# Rhino::Debug.enable_debug
 Rhino::Model.table_name_prefix = "test-#{Socket.gethostname}-#{rand(1000)}"
 Rhino::Model.connect('d0.hdp.pages', 9090) unless Rhino::Model.connected?
 # Rhino::Model.connect('d0.hdp.pages', 9090, Rhino::HBaseFakeInterface) unless Rhino::Model.connected?
