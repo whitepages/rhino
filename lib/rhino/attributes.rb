@@ -58,7 +58,7 @@ module Rhino
 
     def save_attribute(attr_name)
       value = @data[attr_name]
-      debug("Attributes#encode_attribute(#{attr_name.inspect}, #{value.inspect})")
+      debug("Attributes#save_attribute(#{attr_name.inspect}, #{value.inspect})")
       return nil if value.nil?
       value = encode_attribute(attr_name, value) if respond_to?(:convert_attribute)
       value
@@ -78,6 +78,10 @@ module Rhino
 
     alias :respond_to_without_attributes? :respond_to?
     def respond_to?( method )
+      if super
+        return true
+      end
+      
       if call_data = self.class.route_attribute_call(method)
         verb, attr_name = *call_data
         case verb
@@ -87,7 +91,6 @@ module Rhino
           return true
         end
       end
-      super
     end
     
     # Attempts to provide access to the data by attribute name.
