@@ -10,6 +10,9 @@ describe Rhino::Interface::Scanner do
     @page_table.put('com.google', {'title:'=>'google'})
     @page_table.put('com.microsoft', {'title:'=>'microsoft'})
     @page_table.put('com.yahoo', {'title:'=>'yahoo'})
+    @page_table.put('org.apache', {'title:'=>'apache'})
+    @page_table.put('org.apache.hbase', {'title:'=>'hbase'})
+    @page_table.put('org.apache.thrift', {'title:'=>'thrift'})
   end
   
   after(:all) do
@@ -57,6 +60,13 @@ describe Rhino::Interface::Scanner do
     
     it "should return an empty array" do
       @page_table.scan.collect.should == []
+    end
+  end
+
+  describe "when scanning for a particular key prefix" do
+    it "should return all rows with that prefix" do
+      rows = @page_table.scan(:starts_with_prefix=>'org.apache')
+      rows.collect { |row| row['key'] }.start_with?('org.apache').should == true
     end
   end
   

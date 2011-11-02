@@ -17,10 +17,13 @@ module Rhino
       def open_scanner
         @scanner = if @opts[:stop_row]
           htable.hbase.scannerOpenWithStop(htable.table_name, @opts[:start_row], @opts[:stop_row], @opts[:columns])
+        elsif @opts[:starts_with_prefix]
+          htable.hbase.scannerOpenWithPrefix(htable.table_name, @opts[:starts_with_prefix], @opts[:columns])
         else
           htable.hbase.scannerOpen(htable.table_name, @opts[:start_row], @opts[:columns])
         end
       end
+
       
       # Returns the next row in the scanner in the format specified below. Note that the row key is 'key', not 'key:'.
       #   {'key'=>'the row key', 'col1:'=>'val1', 'col2:asdf'=>'val2'}
