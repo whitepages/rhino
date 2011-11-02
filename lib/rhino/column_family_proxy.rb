@@ -10,7 +10,10 @@ class Rhino::ColumnFamilyProxy
   end
 
   def write_all
-    @inner.write
+    opts = {}
+    opts[:validate] = @options[:validate] if @options[:validate] != nil
+
+    @inner.write( opts )
   end
   
   def replace( other )

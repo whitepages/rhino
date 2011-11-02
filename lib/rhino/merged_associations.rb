@@ -47,7 +47,7 @@ module Rhino
       def load_target
         @target = []
         @sources ||= self.ordering.collect { |cf| row.send(cf) }
-        @keys ||= @sources.collect { |source| source.keys }.flatten.compact.uniq
+        @keys ||= @sources.collect { |source| source.nil? ? nil : source.keys }.flatten.compact.uniq
 
         @target ||= {}
         @keys.each do |key|
@@ -79,10 +79,46 @@ module Rhino
         end
       end
     end
+
+    class MergedColumnFamilyProxy < ColumnFamilyProxy
+      attr_accessor :row, :column_family_name, :ordering
+
+      def initialize( row, column_family_name, options )
+        self.row = row
+        self.column_family_name = column_family_name
+        self.ordering = options[:ordering]
+
+        @options = options
+
+        sources = self.ordering.collect { |cf| row.send(cf) }.compact
+
+        if sources.empty?
+          @inner = ColumnFamily.new
+        else
+          @inner = sources.first.inner.class.new()
+        end
+        @inner.row = row
+        @inner.column_family_name = column_family_name
+      
+        sources.each do |cf|
+          @inner.merge_attributes( cf.attributes )
+        end
+      end
+
+      def empty?
+        @inner == nil
+      end
+      
+      def write_all
+      end
+
+      def replace( other )
+        raise MergedAssociationViolation, "Cannot modify merged associations"
+      end
+    end
     
     module ClassMethods
-      def has_merged(column_family_name, options = { })
-        
+      def has_many_merged(column_family_name, options = { })        
         column_family_name = column_family_name.to_s.gsub(':','')
         options = { :ordering => options } if options.is_a?(Array)
         options[:class] ||= Rhino::JsonCell
@@ -92,9 +128,23 @@ module Rhino
         merged_collection_accessor_methods( column_family_name, options, MergedCellsProxy ) 
       end
 
+      def has_one_merged( column_family_name, options = {} )
+        column_family_name = column_family_name.to_s.gsub(':','')
+        options = { :ordering => options } if options.is_a?(Array)
+        options[:class] ||= Rhino::ColumnFamily
+
+        raise "Expected ordering list" if options[:ordering].nil?
+
+        merged_collection_accessor_methods( column_family_name, options, MergedColumnFamilyProxy ) 
+      end
+      
       def merged_collection_accessor_methods(name, options, association_proxy_class)
         define_method("create_#{name}") do |*params|
           association = association_proxy_class.new(self, name, options)
+
+          if association.empty? && options[:optional] == true
+            return nil
+          end
 
           association_instance_set(name, association)
           association

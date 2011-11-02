@@ -77,11 +77,21 @@ module Rhino
       self.attributes = data
     end
         
-    def save(with_timestamp=nil)
-      debug("Model#save() [key=#{key.inspect}, data=#{data.inspect}, timestamp=#{timestamp.inspect}]")
+    def save( input_opts = {} )
+      default_opts = self.class.default_save_opts
 
-      raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages.join("\n")}" if !self.valid?
+      opts = default_opts.clone if !default_opts.nil?
+      opts ||= {}
+      
+      input_opts = { :timestamp => input_opts } if input_opts.is_a? Integer
+      opts.merge!( input_opts )
+      
+      debug("Model#save() [key=#{key.inspect}, data=#{data.inspect}, timestamp=#{opts[:timestamp].inspect}]")
 
+      if !self.valid?
+        raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages.join("\n")}"
+      end
+      
       write_all_associations
       
       # we need to delete data['timestamp'] here or else it will be written to hbase as a column (and will
@@ -91,9 +101,13 @@ module Rhino
       data.delete('timestamp')
 
       output = {}
-      data.keys.each { |k| output[k] = save_attribute( k ) }
+      data.keys.each do |k|
+        next if !opts[:include].nil? && !included_column( k, opts[:include] )
+        next if !opts[:exclude].nil? && included_column( k, opts[:exclude] )
+        output[k] = save_attribute( k )
+      end
 
-      self.class.table.put(key, output, with_timestamp)
+      self.class.table( opts[:table] ).put(key, output, opts[:timestamp])
       if new_record?
         @opts[:new_record] = false
         @opts[:was_new_record] = true
@@ -158,6 +172,16 @@ module Rhino
       data
     end
 
+    def included_column( column_name, column_specs )
+      return false if column_specs.nil? || column_specs.empty?
+
+      return true if column_specs.include?( column_name )
+      return true if column_specs.include?( column_name.split(":").first + ":" )
+
+      return false
+    end
+        
+
     #################
     # CLASS METHODS #
     #################
@@ -190,8 +214,12 @@ module Rhino
     end
     
     # Returns the table interface.
-    def Model.table
-      @table ||= Rhino::Model.adapter::Table.new(connection, table_name)
+    def Model.table( input_table_name = nil )
+      input_table_name ||= table_name
+      @table_cache ||= {}
+      @table_cache[ input_table_name ] ||= Rhino::Model.adapter::Table.new(connection, input_table_name)
+
+      return @table_cache[ input_table_name ]
     end
 
     class_attribute :column_families
@@ -254,20 +282,20 @@ module Rhino
     
     def Model.create(key, data={}, opts={})
       obj = new(key, data, opts)
-      obj.save(opts[:timestamp])
+      obj.save(opts)
       obj
     end
 
-    def Model.create_table()
-      table.create_table( column_families )
+    def Model.create_table( table_name = nil )
+      table(table_name).create_table( column_families )
     end
 
-    def Model.delete_table()
-      table.delete_table
+    def Model.delete_table( table_name = nil )
+      table(table_name).delete_table
     end
 
-    def Model.table_exists?
-      table.exists?
+    def Model.table_exists?( table_name = nil )
+      table(table_name).exists?
     end    
     
     # Scans the table with +opts+ (if provided) and returns an array of each row that is returned by the scanner.
@@ -298,6 +326,15 @@ module Rhino
 
       return output[0]
     end
+
+    def Model.get_table_for( table_spec )
+      case table_spec
+      when String
+        return self.table( table_spec )
+      when Rhino::Model.adapter::Table
+        return table_spec
+      end
+    end
     
     def Model.find_all(*rowkeys)
       get_opts = rowkeys.extract_options!
@@ -306,34 +343,86 @@ module Rhino
       debug("Model.get(#{rowkeys.inspect}, #{get_opts.inspect})")
       
       # handle opts
-      get_opts.keys.each { |fo_key| raise ArgumentError, "invalid key for get opts: #{fo_key.inspect}" unless %w(columns timestamp).include?(fo_key.to_s) }
-      raise ArgumentError, "columns key for get opts is unimplemented" if get_opts.keys.include?(:columns)
-      timestamp = get_opts[:timestamp]
-      
-      # get the row
-      begin
-        args = rowkeys.clone
-        args << { :timestamp => timestamp }
-        
-        data = table.get( *args )
-        debug("-> found [key=#{rowkeys.inspect}, data=#{data.inspect}]")
-
-        output = []
-        rowkeys.each_with_index do |key, ii|
-          output << load( key, data[ii] ) if !data[ii].nil?
+      get_opts.keys.each do |fo_key|
+        unless %w(columns timestamp tables).include?(fo_key.to_s)
+          raise ArgumentError, "invalid key for get opts: #{fo_key.inspect}"
         end
-        return output
-      rescue Rhino::Interface::Table::RowNotFound
-        return nil
       end
-    end
+      
+      raise ArgumentError, "columns key for get opts is unimplemented" if get_opts.keys.include?(:columns)
+      base_timestamp = get_opts[:timestamp]
 
+      merge_tables = get_opts[:tables] || [ { :table => table, :timestamp => base_timestamp } ]
+      
+      row_data = {}
+      
+      merge_tables.each do |table_spec|
+        table, timestamp = case table_spec
+                           when Hash
+                             [ get_table_for(table_spec[:table]), table_spec[:timestamp] ]
+                           else
+                             [ get_table_for(table_spec), nil ]
+                           end
+
+        timestamp ||= base_timestamp
+        
+        # get the row
+        begin
+          args = rowkeys.clone
+          args << { :timestamp => timestamp }
+          
+          data = table.get( *args )
+          debug("-> found [key=#{rowkeys.inspect}, data=#{data.inspect}]")
+
+          rowkeys.each do |key|
+            new_data = data.find {|item| item['key'] == key } 
+
+            row_data[ key ] ||= {}
+            row_data[ key ].merge!( new_data ) if !new_data.nil?
+          end
+        rescue Rhino::Interface::Table::RowNotFound
+        end
+      end
+
+
+      output = []
+
+      rowkeys.each do |key|
+        if !row_data[key].nil? && row_data[key].size > 0
+          row_data[key].delete('key')
+          output << load( key, row_data[key] )
+        end
+      end
+      output
+    end
+ 
     class << self
       alias_method( :find, :get )
     end
     
     def Model.delete_all
       table.delete_all_rows
+    end
+
+    def Model.default_save_opts( opts = nil )
+      if !opts.nil?
+        @save_opts = opts
+        @save_opts[:include] = cleanup_column_spec(@save_opts[:include]) if !@save_opts[:include].nil?
+        @save_opts[:exclude] = cleanup_column_spec(@save_opts[:exclude]) if !@save_opts[:exclude].nil?
+      end
+      return @save_opts
+    end
+
+    def Model.cleanup_column_spec( columns )
+      columns.collect do |column|
+        case column
+        when Symbol
+          column.to_s + ":"
+        when String
+          column += ":" if !column.include?(":")
+          column
+        end
+      end
     end
   end
 

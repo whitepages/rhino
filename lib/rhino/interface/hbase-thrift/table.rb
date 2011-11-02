@@ -127,6 +127,7 @@ module Rhino
         result_columns.values.each do |tcell|
           data['timestamp'] = tcell.timestamp if data['timestamp'] < tcell.timestamp
         end
+        data['key'] = rowresult.row
         return data
       end
       

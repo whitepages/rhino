@@ -49,6 +49,11 @@ module Rhino
       @loaded = true
     end
 
+    def merge_attributes( data )
+      self.attributes = data
+      @loaded = true
+    end
+    
     # Resets the \loaded flag to +false+ and sets the \data to +nil+.
     def reset
       @loaded = false
@@ -75,8 +80,10 @@ module Rhino
     end
     
     # Writes this column family's data to it's columns
-    def write
-      raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages}" if !self.valid?
+    def write(options = {})
+      if options[:validate] != false
+        raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages}" if !self.valid?
+      end
       attributes.each do |name, value|
         row.set_attribute("#{@column_family_name}:#{name}", value)
       end
