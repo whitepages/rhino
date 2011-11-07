@@ -18,6 +18,14 @@ class Alpha < Rhino::Model
   has_many_merged :merged_betas, :class => Beta, :ordering => [ :betas, :edit_betas ]
 end
 
+class Gamma < Rhino::Model
+  has_many :betas,          :class => Beta
+  has_many :edit_betas,     :class => Beta, :validate => false
+  has_many :opt_betas,      :class => Beta, :validate => false, :optional => true
+  has_many_merged :merged_betas, :class => Beta, :ordering => [:betas, :edit_betas, :opt_betas]
+end
+
+
 describe Rhino::MergedAssociations do
   before(:all) do
     Alpha.delete_table if Alpha.table_exists?
@@ -204,6 +212,41 @@ describe Rhino::MergedAssociations do
         alpha.merged_betas.replace( :b2 => { :enum_val => 'A' } )
       end.should raise_error Rhino::MergedAssociationViolation
 
+    end
+
+    it "should not fail when an optional merge candidate column family is missing" do
+      gamma = Gamma.new( 'g1' )
+      gamma.betas.length.should == 0
+      gamma.edit_betas.length.should == 0
+      gamma.opt_betas.should == nil
+      gamma.merged_betas.length.should == 0
+
+      gamma = Gamma.new( 'g1', :betas => { :b1 => { :enum_val => 'A' } } )
+      gamma.betas.length.should == 1
+      gamma.betas[:b1].enum_val.should == 'A'
+      gamma.edit_betas.length.should == 0
+      gamma.opt_betas.should == nil
+      gamma.merged_betas.length.should == 1
+      gamma.merged_betas[:b1].enum_val.should == 'A'
+
+      gamma = Gamma.new( 'g1', :betas => { :b1 => { :enum_val => 'A' } }, :edit_betas => { :b1 => { :enum_val => 'B' } } )
+      gamma.betas.length.should == 1
+      gamma.betas[:b1].enum_val.should == 'A'
+      gamma.edit_betas.length.should == 1
+      gamma.edit_betas[:b1].enum_val.should == 'B'
+      gamma.opt_betas.should == nil
+      gamma.merged_betas.length.should == 1
+      gamma.merged_betas[:b1].enum_val.should == 'B'
+
+      gamma = Gamma.new( 'g1', :betas => { :b1 => { :enum_val => 'A' } }, :edit_betas => { :b1 => { :enum_val => 'B' } }, :opt_betas => { :b1 => { :enum_val => 'C' } } )
+      gamma.betas.length.should == 1
+      gamma.betas[:b1].enum_val.should == 'A'
+      gamma.edit_betas.length.should == 1
+      gamma.edit_betas[:b1].enum_val.should == 'B'
+      gamma.opt_betas.length.should == 1
+      gamma.opt_betas[:b1].enum_val.should == 'C'
+      gamma.merged_betas.length.should == 1
+      gamma.merged_betas[:b1].enum_val.should == 'C'
     end
   end
   
