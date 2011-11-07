@@ -57,7 +57,7 @@ module Rhino
       end
       
       def create_cell( key )
-        contents = @sources.collect { |source| source.find(key) }
+        contents = @sources.collect { |source| source.find(key) unless source.nil? }
         return nil if contents.compact.length == 0
 
         if contents.first.respond_to?( :merge_cell )
@@ -75,7 +75,7 @@ module Rhino
           end
           new_cell
         else
-          contents.last.clone
+          contents.compact.last.clone
         end
       end
     end
