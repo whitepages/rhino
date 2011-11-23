@@ -2,7 +2,7 @@
 
 # The library's version will always match the version of HBase that the thrift file came from.
 module Rhino
-  VERSION = "0.2.3"
+  VERSION = "0.2.4"
 end
 
 Gem::Specification.new do |s|
@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = ">= 1.3.6"
 
-  s.add_dependency "thrift", "~>0.6.0"
+  s.add_dependency "thrift", "~>0.7.0"
   s.add_dependency "activesupport", "~> 3.1.0"
   s.add_dependency "activemodel", "~> 3.1.0"
   s.add_dependency "i18n", "~> 0.6.0"
