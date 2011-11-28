@@ -400,8 +400,8 @@ module Rhino
       alias_method( :find, :get )
     end
     
-    def Model.delete_all
-      table.delete_all_rows
+    def Model.delete_all(opts = {})
+      table.delete_all_rows(opts)
     end
 
     def Model.default_save_opts( opts = nil )

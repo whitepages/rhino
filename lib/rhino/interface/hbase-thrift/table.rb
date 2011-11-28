@@ -104,14 +104,18 @@ module Rhino
       end
       
       # Deletes the row at +key+ from the table.
-      def delete_row(key)
-        hbase.deleteAllRow(table_name, key)
+      def delete_row(key, opts = {} )
+        if opts[:timestamp]
+          hbase.deleteAllRowTs(table_name, key, opts[:timestamp])
+        else
+          hbase.deleteAllRow(table_name, key)
+        end
       end
       
       # Deletes all of the rows in a table.
-      def delete_all_rows
+      def delete_all_rows(opts = {})
         scan.each do |row|
-          delete_row(row['key'])
+          delete_row(row['key'], opts)
         end
       end
       
