@@ -2,7 +2,7 @@
 
 # The library's version will always match the version of HBase that the thrift file came from.
 module Rhino
-  VERSION = "0.2.4"
+  VERSION = "0.2.5"
 end
 
 Gem::Specification.new do |s|
