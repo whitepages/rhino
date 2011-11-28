@@ -93,10 +93,16 @@ module Rhino
         sources = self.ordering.collect { |cf| row.send(cf) }.compact
 
         if sources.empty?
-          @inner = ColumnFamily.new
+          if @options[:optional] == true
+            @inner = nil
+            return
+          else
+            @inner = @options[:class].new()
+          end
         else
           @inner = sources.first.inner.class.new()
         end
+          
         @inner.row = row
         @inner.column_family_name = column_family_name
       
@@ -131,8 +137,11 @@ module Rhino
       def has_one_merged( column_family_name, options = {} )
         column_family_name = column_family_name.to_s.gsub(':','')
         options = { :ordering => options } if options.is_a?(Array)
-        options[:class] ||= Rhino::ColumnFamily
 
+        if options[:optional] != true && options[:class].nil?
+          raise "Must specify class if optional is set"
+        end
+        
         raise "Expected ordering list" if options[:ordering].nil?
 
         merged_collection_accessor_methods( column_family_name, options, MergedColumnFamilyProxy ) 

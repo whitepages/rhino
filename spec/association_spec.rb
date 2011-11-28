@@ -107,8 +107,8 @@ describe Rhino::Cell do
       
       test = ColumnFamilyTest.create( 'page_0102',
                                       :title => 'has one page',
-                                      :test_info => InfoFamily.new ( :name => 'Major Page',
-                                                                     :crawl_date => today ) )
+                                      :test_info => InfoFamily.new( :name => 'Major Page',
+                                                                    :crawl_date => today ) )
       test.test_info.name.should == 'Major Page'
       test.test_info.crawl_date.should === today
       
@@ -123,8 +123,8 @@ describe Rhino::Cell do
       
       test = ColumnFamilyTest.create( 'page_0103',
                                       :title => 'has one page',
-                                      :test_info => InfoFamily.new ( :name => 'Major Page',
-                                                                     :crawl_date => today ) )
+                                      :test_info => InfoFamily.new( :name => 'Major Page',
+                                                                    :crawl_date => today ) )
       test.test_info.name.should == 'Major Page'
       test.test_info.crawl_date.should === today
 
