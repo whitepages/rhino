@@ -28,7 +28,7 @@ module Rhino
   class ColumnFamily
     attr_accessor :column_family_name
     attr_accessor :row
-    
+
     def ColumnFamily.load( row, column_family_name )
       family = self.new
       family.row = row
@@ -74,6 +74,7 @@ module Rhino
       @row = nil
       @column_family_name = nil
 
+      reset
       self.attributes = data
 
       @loaded = true
