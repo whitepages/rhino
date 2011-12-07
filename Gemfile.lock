@@ -6,7 +6,6 @@ PATH
       activesupport (~> 3.1.0)
       hbase-thrift (~> 0.90.4)
       i18n (~> 0.6.0)
-      multi_json (= 1.0.3)
       thrift (~> 0.7.0)
 
 GEM
