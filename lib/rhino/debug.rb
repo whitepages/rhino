@@ -5,6 +5,10 @@ module Rhino
     def self.enable_debug
       @@enable_debug = true
     end
+
+    def self.disable_debug
+      @@enable_debug = false
+    end
     
     def debug(str)
       puts "\e[33mDEBUG: #{str}\e[0m" if @@enable_debug
