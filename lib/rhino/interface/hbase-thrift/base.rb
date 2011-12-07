@@ -12,13 +12,6 @@ module Rhino
       end
       
       def connect
-        transport = Thrift::BufferedTransport.new(Thrift::Socket.new(host, port))
-        protocol = Thrift::BinaryProtocol.new(transport)
-        @client = Apache::Hadoop::Hbase::Thrift::Hbase::Client.new(protocol)
-        transport.open()
-      end
-
-      def connect
         count = 1
         while @client == nil and count < THRIFT_RETRY_COUNT
           transport = Thrift::BufferedTransport.new(Thrift::Socket.new(host, port))
@@ -26,7 +19,7 @@ module Rhino
           @client = Apache::Hadoop::Hbase::Thrift::Hbase::Client.new(protocol)
           begin
             transport.open()
-          rescue Thrift::TransportException
+          rescue Thrift::TransportException => e
             @client = nil
             debug("Could not connect to HBase.  Retrying in 5 seconds..." + count.to_s + " of " + THRIFT_RETRY_COUNT.to_s)
             sleep 5
