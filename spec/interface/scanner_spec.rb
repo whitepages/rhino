@@ -56,10 +56,13 @@ describe Rhino::Interface::Scanner do
     end
   end
   
-  describe "when scanning with only a stop row specified" do
-    it "should return all rows up to but not including the stop row" do
-      rows = @page_table.scan(:stop_row=>'com.microsoft')
-      rows.collect { |row| row['key'] }.should == %w(com.apple com.google)
+
+  describe "when getting an 'n' limited list" do
+    it "should return n rows" do
+      scanner = @page_table.scan
+      rows = scanner.get_list(2)
+      rows.count.should == 2
+      rows.collect { |row| row['key'] }.should == @data[0..1]
     end
   end
   

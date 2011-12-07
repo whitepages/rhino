@@ -46,6 +46,24 @@ module Rhino
           yield(row)
         end
       end
+
+      # Returns the next (n) rows in the scanner in the format specified below. 
+      # advances to the next row
+      #   {'key'=>'the row key', 'col1:'=>'val1', 'col2:asdf'=>'val2'}
+      def get_list(nb_rows)
+        begin
+          rowresults = htable.hbase.scannerGetList(@scanner, nb_rows)
+          return nil if rowresults.nil? || rowresults[0].nil?
+          rows = rowresults.collect { |r|
+            @htable.prepare_rowresult(r)
+          }
+          return rows
+        rescue Apache::Hadoop::Hbase::Thrift::IOError
+          htable.hbase.scannerClose(@scanner)
+          return nil
+        end
+      end
+
     end
   end
 end

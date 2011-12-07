@@ -16,5 +16,10 @@ module Rhino
         yield(row)
       end
     end
+
+    def get_list(*args)
+      @scanner.get_list(*args)
+    end
+
   end
 end
