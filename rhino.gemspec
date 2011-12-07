@@ -25,9 +25,6 @@ Gem::Specification.new do |s|
   
   s.add_dependency "hbase-thrift", "~>0.90.4"
 
-  # locking multi_json to 1.0.3. 1.0.4 does not play well with jruby
-  s.add_dependency "multi_json", "1.0.3"
-  
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'rake', '0.8.7'
 
