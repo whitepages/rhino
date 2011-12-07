@@ -1,4 +1,3 @@
-source "http://rubygems.util.pages/"
 source "http://uproxy.util.pages/rubygems-whitepages/"
 source "http://uproxy.util.pages/rubygems-mirror/"
 source "http://rubygems.org/"
