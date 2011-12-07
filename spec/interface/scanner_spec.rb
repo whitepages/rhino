@@ -5,14 +5,21 @@ describe Rhino::Interface::Scanner do
     Page.delete_table if Page.table_exists?
     Page.create_table
 
+    @data = ['com.apple',
+      'com.google',
+      'com.microsoft',
+      'com.yahoo',
+      'org.apache',
+      'org.apache.hbase',
+      'org.apache.thrift',
+    ]
+    @titles = @data.collect { |c| c.split('.').last }
+
     @page_table = Page.table
-    @page_table.put('com.apple', {'title:'=>'apple'})
-    @page_table.put('com.google', {'title:'=>'google'})
-    @page_table.put('com.microsoft', {'title:'=>'microsoft'})
-    @page_table.put('com.yahoo', {'title:'=>'yahoo'})
-    @page_table.put('org.apache', {'title:'=>'apache'})
-    @page_table.put('org.apache.hbase', {'title:'=>'hbase'})
-    @page_table.put('org.apache.thrift', {'title:'=>'thrift'})
+    @data.each {|c|
+      t = c.split('.').last
+      @page_table.put(c, {'title:'=>t})
+    }
   end
   
   after(:all) do
@@ -23,22 +30,29 @@ describe Rhino::Interface::Scanner do
   describe "scanning all rows" do
     it "should return all rows" do
       rows = @page_table.scan.collect
-      rows.collect { |row| row['title:'] }.should == %w(apple google microsoft yahoo)
-      rows.collect { |row| row['key'] }.should == %w(com.apple com.google com.microsoft com.yahoo)
+      rows.collect { |row| row['title:'] }.should == @titles
+      rows.collect { |row| row['key'] }.should    == @data
     end
   end
   
   describe "when scanning with only a start row specified" do
     it "should return all rows including and after the start row" do
       rows = @page_table.scan(:start_row=>'com.google')
-      rows.collect { |row| row['key'] }.should == %w(com.google com.microsoft com.yahoo)
+      rows.collect { |row| row['key'] }.should == @data[1..@data.count]
     end
   end
   
+  describe "when scanning with only a stop row specified" do
+    it "should return all rows up to but not including the stop row" do
+      rows = @page_table.scan(:stop_row=>'com.microsoft')
+      rows.collect { |row| row['key'] }.should == @data[0..1]
+    end
+  end
+
   describe "when scanning with a start row and a stop row specified" do
     it "should return all rows between the start row (inclusive) and stop row (exclusive)" do
       rows = @page_table.scan(:start_row=>'com.google', :stop_row=>'com.yahoo')
-      rows.collect { |row| row['key'] }.should == %w(com.google com.microsoft)
+      rows.collect { |row| row['key'] }.should == @data[1..2]
     end
   end
   
@@ -66,7 +80,9 @@ describe Rhino::Interface::Scanner do
   describe "when scanning for a particular key prefix" do
     it "should return all rows with that prefix" do
       rows = @page_table.scan(:starts_with_prefix=>'org.apache')
-      rows.collect { |row| row['key'] }.start_with?('org.apache').should == true
+      rows.each { |row|
+        row.key.start_with?('org.apache').should == true
+      }
     end
   end
   
