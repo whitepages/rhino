@@ -21,5 +21,8 @@ module Rhino
       @scanner.get_list(*args)
     end
 
+    def close_scanner(*args)
+      @scanner.close_scanner(*args)
+    end
   end
 end

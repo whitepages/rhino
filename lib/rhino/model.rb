@@ -201,6 +201,14 @@ module Rhino
     def Model.connected?
       @conn != nil
     end
+
+    def Model.disconnect
+      return unless Model.connected?
+      debug("Model.disconnect")
+      @conn.disconnect
+      @conn = nil
+      @adapter = nil
+    end
     
     # Returns the connection. The connection is shared across all models and is stored in Rhino::Model,
     # so models retrieve it from Rhino::Table.

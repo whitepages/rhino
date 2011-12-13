@@ -30,6 +30,10 @@ module Rhino
           debug("Failed to connect to HBase after " + THRIFT_RETRY_COUNT.to_s + " tries.")
         end
       end
+
+      def disconnect()
+        @client = nil
+      end
       
       def table_names
         client.getTableNames()

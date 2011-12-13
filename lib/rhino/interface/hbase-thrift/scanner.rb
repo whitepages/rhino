@@ -24,6 +24,10 @@ module Rhino
         end
       end
 
+      def close_scanner
+        htable.hbase.scannerClose(@scanner)
+        return nil
+      end
       
       # Returns the next row in the scanner in the format specified below. Note that the row key is 'key', not 'key:'.
       #   {'key'=>'the row key', 'col1:'=>'val1', 'col2:asdf'=>'val2'}
