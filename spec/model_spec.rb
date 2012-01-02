@@ -270,9 +270,19 @@ describe Rhino::Model do
       Page.create('abc123', {:title=>'hello'})
       Page.get('abc123').timestamp.should be_within(100).of((Time.now.to_f * 1000).to_i)
     end
-    
-    it "should get the latest row if no timestamp is specified"
-  
+
+    it "should return a valid timestamp for a column when asked" do
+      key = 'google.com'
+      p1 = Page.create(key, {:title=>'google a while ago' }, {:timestamp=>@a_while_ago})
+      p2 = Page.create(key, {:title=>'google even longer ago' }, {:timestamp=>@even_longer_ago})
+      page = Page.get(key, :timestamp=>@a_while_ago)
+      page.title.should == 'google a while ago'
+      page2 = Page.get(key, :timestamp=>@even_longer_ago)
+      page2.title.should == 'google even longer ago'
+
+      page.get_timestamp(Page.determine_attribute_name('title')).should == @a_while_ago
+      page2.get_timestamp(Page.determine_attribute_name('title')).should == @even_longer_ago
+    end
   end
 
   describe "when retrieving only certain columns" do
@@ -378,7 +388,6 @@ describe Rhino::Model do
 
     it "should be able to include a column family and exclude a member of the family" do
     end
-
   end
   
 end

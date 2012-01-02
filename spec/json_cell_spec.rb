@@ -105,6 +105,7 @@ describe Rhino::JsonCell do
       recipe.ingredients.find('baking_powder').amount.should == 3.5      
       recipe.ingredients.find('egg').unit.should == nil
       recipe.ingredients.find('flour').valid?.should == true
+      recipe.ingredients.find('flour').timestamp.should <= (Time.now.utc.to_f * 1000).to_i
       recipe.valid?.should == true
       recipe.save
       
@@ -127,7 +128,7 @@ describe Rhino::JsonCell do
                                                              :name => 'egg',
                                                              :amount => 1) ] )
       recipe.valid?.should == false
-      lambda { recipe.save }.should raise_error(Rhino::ConstraintViolation)      
+      lambda { recipe.save }.should raise_error(Rhino::ConstraintViolation)
 
       lambda do
         recipe = Recipe.create( 'recipe_0004',

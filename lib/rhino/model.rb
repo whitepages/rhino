@@ -71,12 +71,14 @@ module Rhino
 
     def initialize(key, data={}, opts={})
       debug("Model#initialize(#{key.inspect}, #{data.inspect}, #{opts.inspect})")
-      
+
       self.key = key
       self.opts = {:new_record=>true}.merge(opts)
+
       self.attributes = data
+
     end
-        
+
     def save( input_opts = {} )
       default_opts = self.class.default_save_opts
 
