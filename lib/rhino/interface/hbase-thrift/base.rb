@@ -1,3 +1,5 @@
+require 'rhino/interface/hbase-thrift/blocking_socket'
+
 module Rhino
   module HBaseThriftInterface
     class Base < Rhino::Interface::Base
@@ -14,7 +16,9 @@ module Rhino
       def connect
         count = 1
         while @client == nil and count < THRIFT_RETRY_COUNT
-          transport = Thrift::BufferedTransport.new(Thrift::Socket.new(host, port))
+          socket = Thrift::Socket.new(host, port)
+
+          transport = Thrift::BufferedTransport.new(socket)
           protocol = Thrift::BinaryProtocol.new(transport)
           @client = Apache::Hadoop::Hbase::Thrift::Hbase::Client.new(protocol)
           begin
