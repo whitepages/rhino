@@ -25,27 +25,29 @@ module Rhino
       else
         type = self.class.attr_definitions[ name.to_s ][:type] || String
 
+        value = nil if value.respond_to?(:empty?) && value.empty?
+
         if !value.nil? && !value.is_a?(type)
           begin
             if type == Integer
-              value = value.empty? ? nil : Integer(value)
+              value = Integer(value)
             elsif type == Float
-              value = value.empty? ? nil : Float(value)
+              value = Float(value)
             elsif type == Date
-              value = value.empty? ? nil : Date.parse(value)
+              value = Date.parse(value)
             elsif type == DateTime
-              value = value.empty? ? nil : DateTime.parse(value)
+              value = DateTime.parse(value)
             elsif type == Time
-              value = value.empty? ? nil : Time.parse(value)
+              value = Time.parse(value)
             elsif type == Rhino::Boolean
-              value = value.empty? ? nil : case value
-                                           when 't', 'true', '1', 'yes'
-                                             true
-                                           when 'f', 'false', '0', 'no'
-                                             false
-                                           else
-                                             raise ArgumentError
-                                           end
+              value = case value
+                      when 't', 'true', '1', 'yes', 1 
+                        true
+                      when 'f', 'false', '0', 'no', 0
+                        false
+                      else
+                        raise ArgumentError
+                      end
             elsif type == String
               value = value.to_s
             end
