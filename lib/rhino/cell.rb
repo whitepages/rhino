@@ -14,8 +14,9 @@ module Rhino
     end
 
     def timestamp
-      return (Time.now.utc.to_f * 1000).to_i if row.nil?
-      return row.get_timestamp(attr_name)
+      timestamp = row.get_timestamp(attr_name) unless row.nil?
+      timestamp = (Time.now.utc.to_f * 1000).to_i if timestamp.nil?
+      return timestamp
     end
 
     def row
