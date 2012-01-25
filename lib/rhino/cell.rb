@@ -12,7 +12,13 @@ module Rhino
       @contents = contents
       @proxy = proxy
     end
-    
+
+    def timestamp
+      timestamp = row.get_timestamp(attr_name) unless row.nil?
+      timestamp = (Time.now.utc.to_f * 1000).to_i if timestamp.nil?
+      return timestamp
+    end
+
     def row
       return nil if self.proxy.nil?
       self.proxy.row

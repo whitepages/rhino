@@ -248,6 +248,32 @@ describe Rhino::MergedAssociations do
       gamma.merged_betas.length.should == 1
       gamma.merged_betas[:b1].enum_val.should == 'C'
     end
+
+    it "should take the maximum cell timestamp of merged cells" do
+      alpha = Alpha.new( 'a1', :betas => { :b1 => { :enum_val => 'A' } }, :edit_betas => { :b1 => { :enum_val => 'B' } })
+      alpha.save
+
+      alpha = Alpha.get('a1')
+
+      alpha.betas[:b1].timestamp.should == alpha.edit_betas[:b1].timestamp
+
+      sleep(1)
+
+      alpha.merged_betas[:b1].timestamp.should == alpha.betas[:b1].timestamp
+
+      sleep(1)
+
+      alpha.edit_betas[:b1].enum_val = 'C'
+      alpha.edit_betas[:b1].save
+
+      alpha2 = Alpha.get('a1')
+      alpha2.betas[:b1].timestamp.should == alpha.betas[:b1].timestamp
+      alpha2.betas[:b1].timestamp.should < alpha2.edit_betas[:b1].timestamp
+
+      sleep(1)
+
+      alpha2.merged_betas[:b1].timestamp.should == alpha2.edit_betas[:b1].timestamp
+    end
   end
   
   describe "working with has_one_merged associations" do
@@ -261,6 +287,10 @@ describe Rhino::MergedAssociations do
     end
     
     it "should not able to make changes to merged associations" do
+    end
+
+    it "should take the maximum cell timestamp of merged columns" do
+
     end
   end
   

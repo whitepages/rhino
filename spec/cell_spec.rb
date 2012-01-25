@@ -170,7 +170,7 @@ describe Rhino::Cell do
         @page.links.get('com.google.www/search').contents.should == 'Search engine'
         @page.links.get('com.google.www/search').delete
         Page.get(@key).links.get('com.google.www/search').should_not == nil
-        @page.save        
+        @page.save
         Page.get(@key).links.get('com.google.www/search').should == nil
       end
     end
@@ -185,6 +185,12 @@ describe Rhino::Cell do
       @link1 = @page.links.get('com.google.www/search')
       @link2 = @page.links.get('com.example.an/path')
       @link1.should_not == @link2
+    end
+
+    it "should return a valid timestamp when asked" do
+      link = @page.links.get('com.google.www/search')
+      link.timestamp.should_not == nil
+      link.timestamp.should <= (Time.now.utc.to_f * 1000).to_i
     end
   end
 end

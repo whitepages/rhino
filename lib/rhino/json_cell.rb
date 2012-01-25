@@ -15,7 +15,7 @@ module Rhino
       end
       
       row.set_attribute(attr_name, self.to_json)
-    end    
+    end
     
     # Writes this cell's data to the row and saves only this cell.
     def save(timestamp=nil)

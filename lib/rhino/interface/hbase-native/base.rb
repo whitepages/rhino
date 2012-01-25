@@ -1,3 +1,5 @@
+require 'java'
+
 module Rhino
   module HBaseNativeInterface
     class Base < Rhino::Interface::Base
@@ -6,6 +8,8 @@ module Rhino
       def initialize(host, port)
         debug("Rhino::HBaseNativeInterface::Base.new(#{host.inspect}, #{port.inspect})")
         # TODO: check for JVM and throw if not in JVM
+
+        @client = org.apache.hadoop.hbase.client.HConnection.new
 
         @host = host
         @port = port

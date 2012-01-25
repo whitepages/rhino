@@ -67,7 +67,7 @@ module Rhino
         if rowresult.nil? || rowresult[0].nil?
           raise Rhino::Interface::Table::RowNotFound, "No row found in '#{table_name}' with key '#{rowkeys}'"
         end
-        
+
         # TODO: handle timestamps on a per-cell level
         return rowresult.collect { |row| prepare_rowresult(row) }
       end
@@ -124,7 +124,7 @@ module Rhino
       def prepare_rowresult(rowresult)
         result_columns = rowresult.columns
         data = {}
-        result_columns.each { |name, tcell| data[name] = tcell.value }
+        result_columns.each { |name, tcell| data[name] = tcell }
         
         # consider the timestamp to be the timestamp of the most recent cell
         data['timestamp'] = -1
