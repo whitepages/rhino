@@ -5,22 +5,38 @@ module Rhino
         raise NotImplementedError
       end
 
-      def create(column_families)
+      def create_table(column_families)
         raise NotImplementedError
       end
-      
-      def get(*args)
+
+      def exists?
         raise NotImplementedError
       end
-      
-      def put(*args)
+
+      def delete_table
         raise NotImplementedError
       end
-      
-      def delete(*args)
+
+      def get(*rowkeys)
         raise NotImplementedError
       end
-    
+
+      def scan(opts={})
+        raise NotImplementedException
+      end
+
+      def put(key, data, timestamp=nil, opts={})
+        raise NotImplementedError
+      end
+
+      def delete_row(*args)
+        raise NotImplementedError
+      end
+
+      def delete_all_rows
+        raise NotImplementedError
+      end
+
       class RowNotFound < Exception
       end
 
