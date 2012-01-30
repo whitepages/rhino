@@ -286,7 +286,12 @@ describe Rhino::Model do
   end
 
   describe "when retrieving only certain columns" do
-    it "should retrieve only the requested columns"
+    it "should retrieve only the requested columns" do
+      pending "Not Implemented Yet"
+      Page.create('a', :title=>'b', 'links:c'=>'d')
+      page = Page.get('a', :columns=>'links')
+      page.title.should_not == 'b'
+    end
   end
   
   describe "when testing for equality between two rows" do
