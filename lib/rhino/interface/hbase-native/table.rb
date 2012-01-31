@@ -17,6 +17,9 @@ module Rhino
       attr_reader :hbase, :table_name
 
       def initialize(hbase, table_name, opts = {})
+
+        raise LoadError, "Unsupported platform, Rhino::HBaseNativeInterface::Table requires the JRuby platform" unless RUBY_PLATFORM == "java"
+
         @hbase = hbase
         @table_name = table_name
         @opts = opts

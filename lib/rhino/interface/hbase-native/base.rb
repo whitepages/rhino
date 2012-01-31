@@ -11,7 +11,8 @@ module Rhino
 
       def initialize(host, port)
         debug("Rhino::HBaseNativeInterface::Base.new(#{host.inspect}, #{port.inspect})")
-        # TODO: check for JVM and throw if not in JVM
+
+        raise LoadError, "Unsupported platform, Rhino::HBaseNativeInterface:Base requires the JRuby platform" unless RUBY_PLATFORM == "java"
 
         @host = host
         @port = port

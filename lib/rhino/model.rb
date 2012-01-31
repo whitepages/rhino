@@ -188,7 +188,16 @@ module Rhino
     # CLASS METHODS #
     #################
     
-    def Model.connect(host, port, adapter=Rhino::HBaseThriftInterface)
+    def Model.connect(host, port, adapter=nil)
+
+      if adapter.nil?
+        unless RUBY_PLATFORM == "java"
+          adapter = Rhino::HBaseThriftInterface
+        else
+          adapter = Rhino::HBaseNativeInterface
+        end
+      end
+
       debug("Model.connect(#{host.inspect}, #{port.inspect}, #{adapter.inspect})")
       raise "already connected" if connection
       @adapter = adapter

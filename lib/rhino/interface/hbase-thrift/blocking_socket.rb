@@ -135,7 +135,3 @@ module Thrift
     end
   end
 end
-
-if RUBY_PLATFORM == "java"
-  Thrift::Socket = Thrift::BlockingSocket
-end

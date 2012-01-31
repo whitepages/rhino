@@ -1,0 +1,9 @@
+#! /usr/bin/ruby
+
+classpath = []
+
+Dir["/home/orichen/hbase-0.90.4/lib/\*.jar"].each { |jar| classpath << "-J-cp #{jar}" }
+Dir["/home/orichen/hbase-0.90.4/\*.jar"].each { |jar| classpath << "-J-cp #{jar}" }
+
+puts "jruby #{classpath.join(' ')} -S bundle exec test.rb"
+

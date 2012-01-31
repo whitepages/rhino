@@ -1,22 +1,30 @@
-require 'rhino/interface/hbase-thrift/blocking_socket'
+if RUBY_PLATFORM == "java"
+  require 'rhino/interface/hbase-thrift/blocking_socket'
+end
 
 module Rhino
   module HBaseThriftInterface
     class Base < Rhino::Interface::Base
       THRIFT_RETRY_COUNT = 3
       attr_reader :host, :port, :client
-      
+
       def initialize(host, port)
         debug("Rhino::HBaseThriftInterface::Base.new(#{host.inspect}, #{port.inspect})")
+
         @host = host
         @port = port
         connect()
       end
-      
+
       def connect
         count = 1
         while @client == nil and count < THRIFT_RETRY_COUNT
-          socket = Thrift::Socket.new(host, port)
+          socket = if RUBY_PLATFORM == "java"
+                     warn("Rhino::HBaseThriftInterface is NOT functional for production loads when running via JRuby.  Standard Thrift::Socket objects don't work because of a jruby bug with how they run async sockets, overriding with Thrift::BlockingSocket, which doesn't implement timeouts at all.  The recommended interface is Rhino::HBaseNativeInterface")
+                     Thrift::BlockingSocket.new(host, port)
+                   else
+                     Thrift::Socket.new(host, port)
+                   end
 
           transport = Thrift::BufferedTransport.new(socket)
           protocol = Thrift::BinaryProtocol.new(transport)
@@ -38,7 +46,7 @@ module Rhino
       def disconnect()
         @client = nil
       end
-      
+
       def table_names
         client.getTableNames()
       end

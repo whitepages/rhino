@@ -12,6 +12,9 @@ module Rhino
       attr_reader :htable
 
       def initialize(htable, opts={})
+
+        raise LoadError, "Unsupported platform, Rhino::HBaseNativeInterface:Scanner requires the JRuby platform" unless RUBY_PLATFORM == "java"
+
         @htable = htable
         @opts = opts
 

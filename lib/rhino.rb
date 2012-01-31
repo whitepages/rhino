@@ -29,6 +29,12 @@ require 'rhino/interface/hbase-fake/base'
 require 'rhino/interface/hbase-fake/table'
 require 'rhino/interface/hbase-fake/scanner'
 
+if RUBY_PLATFORM == "java"
+  require 'rhino/interface/hbase-native/base'
+  require 'rhino/interface/hbase-native/table'
+  require 'rhino/interface/hbase-native/scanner'
+end
+
 
 require 'rhino/debug'
 require 'rhino/constraints'
