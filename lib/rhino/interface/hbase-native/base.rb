@@ -45,7 +45,7 @@ module Rhino
         begin
           connect() if not @client
           client.send(method, *args) if @client
-        rescue IOException
+        rescue Java::IOException
           @client = nil
           connect()
           client.send(method, *args) if @client

@@ -5,6 +5,7 @@ java_import org.apache.hadoop.hbase.HTableDescriptor
 java_import org.apache.hadoop.hbase.HColumnDescriptor
 java_import org.apache.hadoop.hbase.client.HTablePool
 java_import org.apache.hadoop.hbase.client.HTableInterface
+java_import org.apache.hadoop.hbase.KeyValue
 java_import org.apache.hadoop.hbase.client.Get
 java_import org.apache.hadoop.hbase.client.Put
 java_import org.apache.hadoop.hbase.client.Delete
@@ -23,12 +24,13 @@ module Rhino
       end
 
       def create_table(column_families)
-        column_descriptors = column_families.collect do |family_name|
-          descriptor = org.apache.hadoop.hbase.HColumnDescriptor.new(family_name)
-          descriptor
+        table = org.apache.hadoop.hbase.HTableDescriptor.new(self.table_name.to_s)
+
+        column_families.each do |family_name|
+          descriptor = org.apache.hadoop.hbase.HColumnDescriptor.new(family_name.to_s)
+          table.addFamily(descriptor)
         end
 
-        table = org.apache.hadoop.hbase.HTableDescriptor.new(self.table_name, column_descriptors)
         @hbase.createTable(table)
       end
 
@@ -37,6 +39,7 @@ module Rhino
       end
 
       def delete_table
+        @hbase.disableTable(self.table_name)
         @hbase.deleteTable(self.table_name)
       end
 
@@ -46,6 +49,8 @@ module Rhino
         debug("#{self.class.name}#get(#{rowkeys.inspect}, #{opts.inspect})")
 
         raise(ArgumentError, "get requires a key") if rowkeys.nil? or rowkeys.empty? or rowkeys[0]==''
+
+        # TODO: add java filter support
 
         column_families_to_get = Array(opts.delete(:column_families)).compact
         timestamp = opts.delete(:timestamp)
@@ -75,16 +80,59 @@ module Rhino
         return prepped_results
       end
 
-      def put(*args)
+      def put(rowkey, data, timestamp = nil)
+        timestamp = timestamp.to_i if timestamp
 
+        # separate out data insert/update mutations versus column delete mutations
+        puts = nil
+        deletes = nil
+
+        data.each do |key, val|
+          split_keys = key.split(':')
+          family = split_keys[0]
+          qualifier = split_keys[1]
+
+          unless (val.nil?)
+            if (puts.nil?)
+              if (timestamp.nil?)
+                puts = org.apache.hadoop.hbase.client.Put.new(rowkey.to_java_bytes)
+              else
+                puts = org.apache.hadoop.hbase.client.Put.new(rowkey.to_java_bytes, timestamp)
+              end
+            end
+            puts.add(family.to_java_bytes, qualifier.to_java_bytes, val.to_java_bytes)
+          else
+            deletes = org.apache.hadoop.hbase.client.Delete.new(rowkey.to_java_bytes) if deletes.nil?
+            deletes.deleteColumns(family.to_java_bytes, qualifier.to_java_bytes)
+          end
+        end
+
+        execute_with_table_from_pool do |table_iface|
+          table_iface.put(puts) unless puts.nil?
+          table_iface.delete(deletes) unless deletes.nil?
+        end
       end
 
-      def delete_row(*args)
+      def delete_row(key, opts = {})
+        if (opts[:timestamp])
+          delete = org.apache.hadoop.hbase.client.Delete.new(key.to_java_bytes, opts[:timestamp], nil)
+        else
+          delete = org.apache.hadoop.hbase.client.Delete.new(key.to_java_bytes)
+        end
 
+        execute_with_table_from_pool do |table_iface|
+          table_iface.delete(delete)
+        end
       end
 
       def delete_all_rows(*args)
+        scan.each do |row|
+          delete_row(row['key'], opts)
+        end
+      end
 
+      def scan
+        return Rhino::HBaseNativeInterface::Scanner.new(self, opts)
       end
 
       private
