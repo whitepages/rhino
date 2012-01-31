@@ -1,4 +1,5 @@
 require 'java'
+require 'rhino/interface/hbase-native/scanner'
 
 java_import java.lang.System
 java_import org.apache.hadoop.hbase.HTableDescriptor
@@ -131,8 +132,8 @@ module Rhino
         end
       end
 
-      def scan
-        return Rhino::HBaseNativeInterface::Scanner.new(self, opts)
+      def scan(opts={})
+        return Rhino::HBaseNativeInterface::Scanner.new(@table_pool.getTable(self.table_name), opts)
       end
 
       private
@@ -150,7 +151,7 @@ module Rhino
         return response
       end
 
-      private
+      public
       def prepare_rowresult(row)
         columns = row.list()
         data = {}
