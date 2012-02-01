@@ -59,10 +59,10 @@ module Rhino
         column_families_to_get = Array(opts.delete(:column_families)).compact
         timestamp = opts.delete(:timestamp)
         timestamp = timestamp.to_i if timestamp
-        get_descriptor.setTimeStamp(timestamp) if timestamp
 
         gets = rowkeys.collect do |key|
           get_descriptor = org.apache.hadoop.hbase.client.Get.new(key.to_java_bytes)
+          get_descriptor.setTimeRange(0, timestamp + 1) if timestamp
           column_families_to_get.each { |column_name| get_descriptor.addFamily(column_name.to_java_bytes) }
           get_descriptor
         end
@@ -94,7 +94,7 @@ module Rhino
         data.each do |key, val|
           split_keys = key.split(':')
           family = split_keys[0]
-          qualifier = split_keys[1]
+          qualifier = split_keys[1] || ''
 
           unless (val.nil?)
             if (puts.nil?)
@@ -104,6 +104,7 @@ module Rhino
                 puts = org.apache.hadoop.hbase.client.Put.new(rowkey.to_java_bytes, timestamp)
               end
             end
+
             puts.add(family.to_java_bytes, qualifier.to_java_bytes, val.to_java_bytes)
           else
             deletes = org.apache.hadoop.hbase.client.Delete.new(rowkey.to_java_bytes) if deletes.nil?
@@ -129,21 +130,25 @@ module Rhino
         end
       end
 
-      def delete_all_rows(*args)
+      def delete_all_rows(opts = {})
         scan.each do |row|
           delete_row(row['key'], opts)
         end
       end
 
       def scan(opts={})
-        return Rhino::HBaseNativeInterface::Scanner.new(@table_pool.getTable(self.table_name), opts)
+        return Rhino::HBaseNativeInterface::Scanner.new(self, opts)
+      end
+
+      def get_table
+        @table_pool.getTable(self.table_name)
       end
 
       private
       def execute_with_table_from_pool(&blk)
         response = nil
         begin
-          table_iface = @table_pool.getTable(self.table_name)
+          table_iface = self.get_table
           response = blk.call(table_iface)
         rescue IOException => e # TODO: actually rescue some meaningful errors here
           raise Rhino::Interface::Table::TableNotFound, e.message
@@ -156,11 +161,14 @@ module Rhino
 
       public
       def prepare_rowresult(row)
+        rowkey = row.getRow()
+        return {} if rowkey.nil?
+
         columns = row.list()
         data = {}
 
         data['timestamp'] = -1
-        data['key'] = String.from_java_bytes(row.getRow()) # this corresponds to the rowkey
+        data['key'] = String.from_java_bytes(rowkey) # this corresponds to the rowkey
 
         columns.each do |kvp|
           family = String.from_java_bytes(kvp.getFamily())
