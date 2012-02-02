@@ -54,7 +54,7 @@ module Rhino
 
         debug("#{self.class.name}#get(#{rowkeys.inspect}, #{opts.inspect})")
 
-        raise(ArgumentError, "get requires a key") if rowkeys.nil? or rowkeys.empty? or rowkeys[0]==''
+        raise(ArgumentError, "get requires a key") if rowkeys.nil? || rowkeys.empty? || rowkeys[0].nil? || rowkeys[0].empty?
 
         # TODO: add java filter support
 
@@ -65,6 +65,7 @@ module Rhino
         gets = rowkeys.collect do |key|
           get_descriptor = org.apache.hadoop.hbase.client.Get.new(key.to_java_bytes)
           get_descriptor.setTimeRange(0, timestamp + 1) if timestamp
+
           column_families_to_get.each { |column_name| get_descriptor.addFamily(column_name.to_java_bytes) }
           get_descriptor
         end
@@ -73,9 +74,9 @@ module Rhino
           table_iface.get(gets)
         end
 
-        raise Rhino::Interface::Table::RowNotFound, "Request for keys #{rowkeys.inspect} returned no results" if results.nil?
+        prepped_results = results.collect { |r| prepare_rowresult(r) }
 
-        prepped_results = results.map { |r| prepare_rowresult(r) }
+        raise Rhino::Interface::Table::RowNotFound, "No row found in '#{table_name}' with key '#{rowkeys}'" if prepped_results.nil? || prepped_results.empty? || prepped_results[0].nil? || prepped_results[0].empty?
 
         return prepped_results
       end
@@ -91,6 +92,8 @@ module Rhino
           family, qualifier = key.split(':', 2)
 
           if (val)
+            raise(ArgumentError, "column values must be strings or nil") unless val.is_a?(String)
+
             args = [ rowkey.to_java_bytes ]
             args << timestamp if timestamp
             puts = org.apache.hadoop.hbase.client.Put.new( * args ) if puts.nil?
@@ -119,7 +122,7 @@ module Rhino
       end
 
       def delete_all_rows(opts = {})
-        scan.each do |row|
+        scan().each do |row|
           delete_row(row['key'], opts)
         end
       end

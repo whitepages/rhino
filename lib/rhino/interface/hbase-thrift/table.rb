@@ -40,7 +40,7 @@ module Rhino
 
         debug("#{self.class.name}#get(#{rowkeys.inspect}, #{opts.inspect})")
 
-        raise(ArgumentError, "get requires a key") if rowkeys.nil? or rowkeys.empty? or rowkeys[0]==''
+        raise(ArgumentError, "get requires a key") if rowkeys.nil? || rowkeys.empty? || rowkeys[0].nil? || rowkeys[0]==''
 
         columns = Array(opts.delete(:columns)).compact
 

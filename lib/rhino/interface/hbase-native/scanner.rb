@@ -67,6 +67,14 @@ module Rhino
           yield(row)
         end
       end
+
+      def get_list(nb_rows)
+        open_scanner()
+        list = []
+        nb_rows.times { list << next_row() }
+        close_scanner()
+        return list
+      end
     end
   end
 end
