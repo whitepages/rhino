@@ -94,9 +94,11 @@ module Rhino
           if (val)
             raise(ArgumentError, "column values must be strings or nil") unless val.is_a?(String)
 
-            args = [ rowkey.to_java_bytes ]
-            args << timestamp if timestamp
-            puts = org.apache.hadoop.hbase.client.Put.new( * args ) if puts.nil?
+            unless puts
+              args = [ rowkey.to_java_bytes ]
+              args << timestamp if timestamp
+              puts = org.apache.hadoop.hbase.client.Put.new( * args )
+            end
 
             puts.add(family.to_java_bytes, qualifier.to_java_bytes, val.to_java_bytes)
           else

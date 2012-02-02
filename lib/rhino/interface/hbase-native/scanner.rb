@@ -33,7 +33,7 @@ module Rhino
           @opts[:columns].each do |col|
             family, qualifier = col.split(':', 2)
 
-            unless(qualifier.empty?)
+            unless(qualifier.nil? || qualifier.empty?)
               @scan_criteria.addColumn(family.to_java_bytes, qualifier.to_java_bytes)
             else
               @scan_criteria.addFamily(family.to_java_bytes)
