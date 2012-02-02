@@ -29,6 +29,7 @@ module Rhino
 
       def disconnect
         @client.close() unless @client.nil?
+      ensure
         @client = nil
       end
 

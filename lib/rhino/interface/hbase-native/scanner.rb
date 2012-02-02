@@ -23,21 +23,17 @@ module Rhino
       end
 
       def open_scanner
-        @scan_criteria = if @opts[:stop_row]
-          org.apache.hadoop.hbase.client.Scan.new(@opts[:start_row].to_java_bytes, @opts[:stop_row].to_java_bytes)
-        elsif @opts[:start_row] != ''
-          org.apache.hadoop.hbase.client.Scan.new(@opts[:start_row].to_java_bytes)
-        else
-          org.apache.hadoop.hbase.client.Scan.new()
-        end
+        args = []
+        args << @opts[:start_row] if @opts[:start_row] != '' || @opts[:stop_row]
+        args << @opts[:stop_row] if @opts[:stop_row]
+
+        @scan_criteria = org.apache.hadoop.hbase.client.Scan.new( * (args.map { |v| v.to_java_bytes }))
 
         if @opts[:columns]
           @opts[:columns].each do |col|
-            col_split = col.split(':')
-            family = col_split[0]
-            qualifier = col_split[1]
+            family, qualifier = col.split(':', 2)
 
-            unless(qualifier.nil?)
+            unless(qualifier.empty?)
               @scan_criteria.addColumn(family.to_java_bytes, qualifier.to_java_bytes)
             else
               @scan_criteria.addFamily(family.to_java_bytes)
@@ -52,23 +48,22 @@ module Rhino
 
       def close_scanner
         @scanner.close()
-        return nil
+      ensure
+        @scanner = nil
       end
 
       def next_row
-        begin
-          rowresult = @scanner.next()
-          return self.close_scanner() if rowresult.nil?
+        rowresult = @scanner.next()
+        return close_scanner() if rowresult.nil?
 
-          row = @htable.prepare_rowresult(rowresult)
-          return row
-        rescue Java::IOException
-          return self.close_scanner()
-        end
+        row = @htable.prepare_rowresult(rowresult)
+        return row
+      rescue Java::IOException
+        return close_scanner()
       end
 
       def each
-        while row = self.next_row()
+        while row = next_row()
           yield(row)
         end
       end
