@@ -34,9 +34,9 @@ if RUBY_PLATFORM == "java"
   Dir["/usr/lib/hbase/\*.jar"].each { |jar| require jar }
   Dir["/usr/lib/hbase/lib/\*.jar"].each { |jar| require jar }
 
-  require 'rhino/interface/hbase-native/base'
-  require 'rhino/interface/hbase-native/table'
-  require 'rhino/interface/hbase-native/scanner'
+  require 'rhino/interface/hbase-java/base'
+  require 'rhino/interface/hbase-java/table'
+  require 'rhino/interface/hbase-java/scanner'
 end
 
 

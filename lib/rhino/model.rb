@@ -190,11 +190,11 @@ module Rhino
     
     def Model.connect(host, port, adapter=nil)
 
-      if adapter.nil?
-        unless RUBY_PLATFORM == "java"
-          adapter = Rhino::HBaseThriftInterface
+      unless adapter
+        if RUBY_PLATFORM == "java"
+          adapter = Rhino::HBaseNativeJavaInterface
         else
-          adapter = Rhino::HBaseNativeInterface
+          adapter = Rhino::HBaseThriftInterface
         end
       end
 

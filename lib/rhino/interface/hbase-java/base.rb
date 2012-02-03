@@ -5,14 +5,14 @@ java_import org.apache.hadoop.hbase.HBaseConfiguration
 java_import org.apache.hadoop.hbase.client.HBaseAdmin
 
 module Rhino
-  module HBaseNativeInterface
+  module HBaseNativeJavaInterface
     class Base < Rhino::Interface::Base
       attr_reader :host, :port, :client
 
       def initialize(host, port)
-        debug("Rhino::HBaseNativeInterface::Base.new(#{host.inspect}, #{port.inspect})")
+        debug("Rhino::HBaseNativeJavaInterface::Base.new(#{host.inspect}, #{port.inspect})")
 
-        raise LoadError, "Unsupported platform, Rhino::HBaseNativeInterface:Base requires the JRuby platform" unless RUBY_PLATFORM == "java"
+        raise LoadError, "Unsupported platform, Rhino::HBaseNativeJavaInterface:Base requires the JRuby platform" unless RUBY_PLATFORM == "java"
 
         @host = host
         @port = port

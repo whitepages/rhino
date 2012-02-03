@@ -1,5 +1,5 @@
 require 'java'
-require 'rhino/interface/hbase-native/scanner'
+require 'rhino/interface/hbase-java/scanner'
 
 java_import java.lang.System
 java_import org.apache.hadoop.hbase.HTableDescriptor
@@ -12,7 +12,7 @@ java_import org.apache.hadoop.hbase.client.Put
 java_import org.apache.hadoop.hbase.client.Delete
 
 module Rhino
-  module HBaseNativeInterface
+  module HBaseNativeJavaInterface
     class Table < Rhino::Interface::Table
       DEFAULT_POOL_SIZE = 10
 
@@ -20,7 +20,7 @@ module Rhino
 
       def initialize(hbase, table_name, opts = {})
 
-        raise LoadError, "Unsupported platform, Rhino::HBaseNativeInterface::Table requires the JRuby platform" unless RUBY_PLATFORM == "java"
+        raise LoadError, "Unsupported platform, Rhino::HBaseNativeJavaInterface::Table requires the JRuby platform" unless RUBY_PLATFORM == "java"
 
         @hbase = hbase
         @table_name = table_name
@@ -130,7 +130,7 @@ module Rhino
       end
 
       def scan(opts={})
-        return Rhino::HBaseNativeInterface::Scanner.new(self, opts)
+        return Rhino::HBaseNativeJavaInterface::Scanner.new(self, opts)
       end
 
       def get_table

@@ -5,7 +5,7 @@ java_import org.apache.hadoop.hbase.client.ResultScanner
 java_import org.apache.hadoop.hbase.filter.PrefixFilter
 
 module Rhino
-  module HBaseNativeInterface
+  module HBaseNativeJavaInterface
     class Scanner
       include Enumerable
 
@@ -13,7 +13,7 @@ module Rhino
 
       def initialize(htable, opts={})
 
-        raise LoadError, "Unsupported platform, Rhino::HBaseNativeInterface:Scanner requires the JRuby platform" unless RUBY_PLATFORM == "java"
+        raise LoadError, "Unsupported platform, Rhino::HBaseNativeJavaInterface:Scanner requires the JRuby platform" unless RUBY_PLATFORM == "java"
 
         @htable = htable
         @opts = opts
