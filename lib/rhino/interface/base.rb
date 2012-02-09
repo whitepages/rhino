@@ -4,7 +4,7 @@ module Rhino
       def initialize(*args)
         raise NotImplementedError
       end
-      
+
       class RowNotFound < Exception
 
       end

@@ -55,13 +55,14 @@ module Rhino
           @target << new_cell if !new_cell.nil?
         end
       end
-      
+
       def create_cell( key )
         contents = @sources.collect { |source| source.find(key) unless source.nil? }
         return nil if contents.compact.length == 0
 
+        new_cell = nil
+        timestamp = 0
         if contents.first.respond_to?( :merge_cell )
-          new_cell = nil
           contents.each do |item|
             if item
               if new_cell.nil?
@@ -69,14 +70,23 @@ module Rhino
               else
                 new_cell = new_cell.merge_cell( item )
               end
+              timestamp = item.timestamp if item.timestamp > timestamp
             else
               # for now do nothing, should have some mechanism to delete in a merge
             end
           end
-          new_cell
         else
-          contents.compact.last.clone
+          items = contents.compact
+          new_cell = items.last.clone
+          items.each { |item| timestamp = item.timestamp if item.timestamp > timestamp }
         end
+
+        unless new_cell.nil?
+          new_cell.proxy = self
+          new_cell.row.set_timestamp(new_cell.attr_name, timestamp)
+        end
+
+        return new_cell
       end
     end
 
@@ -102,10 +112,10 @@ module Rhino
         else
           @inner = sources.first.inner.class.new()
         end
-          
+
         @inner.row = row
         @inner.column_family_name = column_family_name
-      
+
         sources.each do |cf|
           @inner.merge_attributes( cf.attributes )
         end
@@ -114,7 +124,7 @@ module Rhino
       def empty?
         @inner == nil
       end
-      
+
       def write_all
       end
 

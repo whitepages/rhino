@@ -56,10 +56,9 @@ module Rhino
     def set_attribute(attr_name, value)
       debug("Attributes#set_attribute(#{attr_name.inspect}, #{value.inspect})")
       @data ||= {}
-      @timestamps ||= {}
 
       if (value.is_a?(Apache::Hadoop::Hbase::Thrift::TCell))
-        @timestamps[attr_name] = value.timestamp
+        set_timestamp(attr_name, value.timestamp)
         value = value.value
       end
 
@@ -81,12 +80,22 @@ module Rhino
       @data[attr_name]
     end
 
-    def get_timestamp(attr_name)
+    def get_timestamp_or_nil(attr_name)
       @timestamps ||= {}
-      debug("Attributes#get_timestamp(#{attr_name.inspect}) => #{timestamps[attr_name].inspect}")
-      
-      return (Time.now.utc.to_f * 1000).to_i unless @timestamps.include?(attr_name)
+      debug("Attributes#get_timestamp_or_nil(#{attr_name.inspect}) => #{timestamps[attr_name].inspect}")
+
       return @timestamps[attr_name]
+    end
+
+    def get_timestamp(attr_name)
+      return get_timestamp_or_nil(attr_name) || (Time.now.utc.to_f * 1000).to_i
+    end
+
+    def set_timestamp(attr_name, timestamp)
+      @timestamps ||= {}
+      debug("Attributes#set_timestamp(#{attr_name.inspect}) => #{timestamps[attr_name].inspect}")
+
+      @timestamps[attr_name] = timestamp
     end
 
     # If <tt>attr_name</tt> is a column family, nulls out the value. If <tt>attr_name</tt> is a column, removes the column from the row.

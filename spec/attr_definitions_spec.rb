@@ -199,6 +199,20 @@ describe Rhino::AttrDefinitions do
       end.should raise_error(Rhino::TypeViolation)
     end
 
+    it "should be handle a variety of boolean definitions" do
+      ['t', 'true', '1', 'yes', 1, true].each do |bool|
+        test_name = "test_0005c-#{bool.to_s}"
+        attrd = AttrDefns.create( test_name, :tests => [ JsonCellTest.new( 'cell_0000',
+                                                                 :bool_attr => bool ) ] )
+        attrd.tests.find('cell_0000').bool_attr.should be_a Rhino::Boolean
+        attrd.tests.find('cell_0000').bool_attr.should == true
+
+        check_attrd = AttrDefns.find( test_name )
+        check_attrd.tests.find('cell_0000').bool_attr.should be_a Rhino::Boolean
+        check_attrd.tests.find('cell_0000').bool_attr.should == true
+      end
+    end
+
     it "should be able to convert an str attribute" do
       [ 1, 1.0, Date.today, DateTime.now ].each do |testval|
         attrd = AttrDefns.create( 'test_0006',
