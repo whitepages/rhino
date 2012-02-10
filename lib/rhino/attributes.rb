@@ -19,7 +19,7 @@ module Rhino
         attr_name = determine_attribute_name(method)
         return nil unless attr_name
 
-        debug("-> route_attribute_call: attr_name=#{attr_name.inspect}, verb=#{verb}")
+        debug{"-> route_attribute_call: attr_name=#{attr_name.inspect}, verb=#{verb}"}
         return [verb, attr_name]
       end
     end
@@ -54,7 +54,7 @@ module Rhino
     end
 
     def set_attribute(attr_name, value)
-      debug("Attributes#set_attribute(#{attr_name.inspect}, #{value.inspect})")
+      debug{"Attributes#set_attribute(#{attr_name.inspect}, #{value.inspect})"}
       @data ||= {}
 
       if (value.is_a?(Apache::Hadoop::Hbase::Thrift::TCell))
@@ -68,7 +68,7 @@ module Rhino
 
     def save_attribute(attr_name)
       value = @data[attr_name]
-      debug("Attributes#save_attribute(#{attr_name.inspect}, #{value.inspect})")
+      debug{"Attributes#save_attribute(#{attr_name.inspect}, #{value.inspect})"}
       return nil if value.nil?
       value = encode_attribute(attr_name, value) if respond_to?(:convert_attribute)
       value
@@ -76,13 +76,13 @@ module Rhino
 
     def get_attribute(attr_name)
       @data ||= {}
-      debug("Attributes#get_attribute(#{attr_name.inspect}) => #{data[attr_name].inspect}")
+      debug{"Attributes#get_attribute(#{attr_name.inspect}) => #{data[attr_name].inspect}"}
       @data[attr_name]
     end
 
     def get_timestamp_or_nil(attr_name)
       @timestamps ||= {}
-      debug("Attributes#get_timestamp_or_nil(#{attr_name.inspect}) => #{timestamps[attr_name].inspect}")
+      debug{"Attributes#get_timestamp_or_nil(#{attr_name.inspect}) => #{timestamps[attr_name].inspect}"}
 
       return @timestamps[attr_name]
     end
@@ -93,14 +93,14 @@ module Rhino
 
     def set_timestamp(attr_name, timestamp)
       @timestamps ||= {}
-      debug("Attributes#set_timestamp(#{attr_name.inspect}) => #{timestamps[attr_name].inspect}")
+      debug{"Attributes#set_timestamp(#{attr_name.inspect}) => #{timestamps[attr_name].inspect}"}
 
       @timestamps[attr_name] = timestamp
     end
 
     # If <tt>attr_name</tt> is a column family, nulls out the value. If <tt>attr_name</tt> is a column, removes the column from the row.
     def delete_attribute(attr_name)
-      debug("Attributes#delete_attribute(#{attr_name.inspect})")
+      debug{"Attributes#delete_attribute(#{attr_name.inspect})"}
       set_attribute(attr_name, nil)
     end
 
@@ -125,7 +125,7 @@ module Rhino
     #   page.meta # => page.data['meta:']
     #   page.meta_author # => page.data['meta:author']
     def method_missing(method, *args)
-      debug("Attributes#method_missing(#{method.inspect}, #{args.inspect})")
+      debug{"Attributes#method_missing(#{method.inspect}, #{args.inspect})"}
       if call_data = self.class.route_attribute_call(method)
         verb, attr_name = *call_data
         case verb

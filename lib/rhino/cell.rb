@@ -37,7 +37,7 @@ module Rhino
     end
         
     def key=(new_key)
-      debug("#{self.class.name}#key= called, going to move value from #{attr_name} to :#{new_key}")
+      debug{"#{self.class.name}#key= called, going to move value from #{attr_name} to :#{new_key}"}
       row.delete_attribute(attr_name)
       @key = new_key
       # after setting @key, attr_name will have changed to the new full column name, so #write will write the right cell
@@ -46,7 +46,7 @@ module Rhino
     
     # Sets the contents of this object and updates them in the containing model.
     def contents=(new_contents)
-      debug("#{self.class.name}#contents= called, going to update containing model's #{attr_name}")
+      debug{"#{self.class.name}#contents= called, going to update containing model's #{attr_name}"}
       @contents = new_contents
       write
     end
@@ -71,7 +71,7 @@ module Rhino
     end
     
     def self.belongs_to(containing_class_name)
-      debug("#{self.class.name} belongs_to #{containing_class_name}")
+      debug{"#{self.class.name} belongs_to #{containing_class_name}"}
       # for the Page example, this would define Cell#page
       define_method(containing_class_name) { row }
     end

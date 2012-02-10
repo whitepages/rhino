@@ -38,7 +38,7 @@ module Rhino
         opts = rowkeys.extract_options!
         opts = DEFAULT_GET_OPTIONS.merge(opts)
 
-        debug("#{self.class.name}#get(#{rowkeys.inspect}, #{opts.inspect})")
+        debug{"#{self.class.name}#get(#{rowkeys.inspect}, #{opts.inspect})"}
 
         raise(ArgumentError, "get requires a key") if rowkeys.nil? || rowkeys.empty? || rowkeys[0].nil? || rowkeys[0]==''
 
@@ -62,7 +62,7 @@ module Rhino
           raise e
         end
 
-        debug("   => #{rowresult.inspect}")
+        debug{"   => #{rowresult.inspect}"}
 
         if rowresult.nil? || rowresult[0].nil?
           raise Rhino::Interface::Table::RowNotFound, "No row found in '#{table_name}' with key '#{rowkeys}'"

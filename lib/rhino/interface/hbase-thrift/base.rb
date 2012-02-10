@@ -9,7 +9,7 @@ module Rhino
       attr_reader :host, :port, :client
 
       def initialize(host, port)
-        debug("Rhino::HBaseThriftInterface::Base.new(#{host.inspect}, #{port.inspect})")
+        debug{"Rhino::HBaseThriftInterface::Base.new(#{host.inspect}, #{port.inspect})"}
 
         @host = host
         @port = port
@@ -33,13 +33,13 @@ module Rhino
             transport.open()
           rescue Thrift::TransportException => e
             @client = nil
-            debug("Could not connect to HBase.  Retrying in 5 seconds..." + count.to_s + " of " + THRIFT_RETRY_COUNT.to_s)
+            debug{"Could not connect to HBase.  Retrying in 5 seconds..." + count.to_s + " of " + THRIFT_RETRY_COUNT.to_s}
             sleep 5
             count = count + 1
           end
         end
         if count == THRIFT_RETRY_COUNT
-          debug("Failed to connect to HBase after " + THRIFT_RETRY_COUNT.to_s + " tries.")
+          debug{"Failed to connect to HBase after " + THRIFT_RETRY_COUNT.to_s + " tries."}
         end
       end
 
@@ -52,7 +52,7 @@ module Rhino
       end
 
       def method_missing(method, *args)
-        debug("#{self.class.name}#method_missing(#{method.inspect}, #{args.inspect})")
+        debug{"#{self.class.name}#method_missing(#{method.inspect}, #{args.inspect})"}
         begin
           connect() if not @client
           client.send(method, *args) if @client

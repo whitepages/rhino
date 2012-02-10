@@ -52,7 +52,7 @@ module Rhino
       def get(*rowkeys)
         opts = rowkeys.extract_options!
 
-        debug("#{self.class.name}#get(#{rowkeys.inspect}, #{opts.inspect})")
+        debug{"#{self.class.name}#get(#{rowkeys.inspect}, #{opts.inspect})"}
 
         raise(ArgumentError, "get requires a key") if rowkeys.nil? || rowkeys.empty? || rowkeys[0].nil? || rowkeys[0].empty?
 

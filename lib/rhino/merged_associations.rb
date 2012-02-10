@@ -10,7 +10,7 @@ module Rhino
       attr_accessor :row, :column_family_name, :ordering
 
       def initialize(row, column_family_name, options)
-        debug("CellsProxy#initialize(row, #{column_family_name}, #{cell_class})")
+        debug{"CellsProxy#initialize(row, #{column_family_name}, #{cell_class})"}
         reset
         self.row = row
         self.column_family_name = column_family_name

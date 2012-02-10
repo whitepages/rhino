@@ -15,7 +15,7 @@ module Rhino
         attr_name = determine_attribute_name(method)
         return nil unless attr_name
         
-        debug("-> route_attribute_call: attr_name=#{attr_name.inspect}, verb=#{verb}")
+        debug{"-> route_attribute_call: attr_name=#{attr_name.inspect}, verb=#{verb}"}
         return [verb, attr_name]
       end      
     end

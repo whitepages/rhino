@@ -111,7 +111,7 @@ module Rhino
     end
 
     def self.belongs_to(containing_class_name)
-      debug("#{self.class.name} belongs_to #{containing_class_name}")
+      debug{"#{self.class.name} belongs_to #{containing_class_name}"}
       # for the Page example, this would define Cell#page
       define_method(containing_class_name) { row }
     end

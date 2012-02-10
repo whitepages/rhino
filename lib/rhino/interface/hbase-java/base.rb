@@ -10,7 +10,7 @@ module Rhino
       attr_reader :host, :port, :client
 
       def initialize(host, port)
-        debug("Rhino::HBaseNativeJavaInterface::Base.new(#{host.inspect}, #{port.inspect})")
+        debug{"Rhino::HBaseNativeJavaInterface::Base.new(#{host.inspect}, #{port.inspect})"}
 
         raise LoadError, "Unsupported platform, Rhino::HBaseNativeJavaInterface:Base requires the JRuby platform" unless RUBY_PLATFORM == "java"
 
@@ -43,7 +43,7 @@ module Rhino
       end
 
       def method_missing(method, *args)
-        debug("#{self.class.name}#method_missing(#{method.inspect}, #{args.inspect})")
+        debug{"#{self.class.name}#method_missing(#{method.inspect}, #{args.inspect})"}
         begin
           connect() if not @client
           client.send(method, *args) if @client
