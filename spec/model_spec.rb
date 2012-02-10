@@ -37,7 +37,7 @@ describe Rhino::Model do
       pX.title.should == 'bar'
     end
   end
-  
+
   describe "when setting up a table" do
     before do
       @table = Page
@@ -287,10 +287,21 @@ describe Rhino::Model do
 
   describe "when retrieving only certain columns" do
     it "should retrieve only the requested columns" do
-      pending "Not Implemented Yet"
       Page.create('a', :title=>'b', 'links:c'=>'d')
+      Page.create('b', :title=>'e', 'links:c'=>'f', 'links:d' => 'g')
       page = Page.get('a', :columns=>'links')
-      page.title.should_not == 'b'
+      # title column family should not be returned
+      page.title.should == nil
+
+      all = Page.find_all(['a','b'], :columns=>'links')
+      # title column family should not be returned
+      all.first.title.should == nil
+      all.last.title.should  == nil
+      # all values for requested column families should be returned
+      all.first.links.find('c').contents.should == 'd'
+      all.first.links.find('d').should == nil
+      all.last.links.find('c').contents.should == 'f'
+      all.last.links.find('d').contents.should == 'g'
     end
   end
   

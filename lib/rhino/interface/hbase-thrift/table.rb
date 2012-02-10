@@ -1,3 +1,4 @@
+
 module Rhino
   module HBaseThriftInterface
     class Table < Rhino::Interface::Table
@@ -48,12 +49,15 @@ module Rhino
         timestamp = timestamp.to_i if timestamp
 
         begin
+
           rowresult = if timestamp
                         # This appears to be a bug in the HBase thrift interface. It is apparently
                         # ignoring the timestamp that gets pass in for this version of the method
                         #
                         # hbase.getRowsTs(table_name, rowkeys, timestamp + 1)
                         rowkeys.collect { |rowkey| hbase.getRowTs(table_name, rowkey, timestamp + 1) }.flatten
+                      elsif (columns)
+                        hbase.getRowsWithColumns( table_name, rowkeys, columns )
                       else
                         hbase.getRows(table_name, rowkeys)
                       end

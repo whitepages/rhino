@@ -359,7 +359,6 @@ module Rhino
         end
       end
       
-      raise ArgumentError, "columns key for get opts is unimplemented" if get_opts.keys.include?(:columns)
       base_timestamp = get_opts[:timestamp]
 
       merge_tables = get_opts[:tables] || [ { :table => table, :timestamp => base_timestamp } ]
@@ -379,7 +378,9 @@ module Rhino
         # get the row
         begin
           args = rowkeys.clone
-          args << { :timestamp => timestamp }
+          opts = { :timestamp => timestamp }
+          opts[:columns] = get_opts[:columns] if get_opts[:columns]
+          args << opts
           
           data = table.get( *args )
           debug("-> found [key=#{rowkeys.inspect}, data=#{data.inspect}]")
