@@ -70,7 +70,7 @@ module Rhino
   class Model
 
     def initialize(key, data={}, opts={})
-      debug("Model#initialize(#{key.inspect}, #{data.inspect}, #{opts.inspect})")
+      debug{"Model#initialize(#{key.inspect}, #{data.inspect}, #{opts.inspect})"}
 
       self.key = key
       self.opts = {:new_record=>true}.merge(opts)
@@ -88,7 +88,7 @@ module Rhino
       input_opts = { :timestamp => input_opts } if input_opts.is_a? Integer
       opts.merge!( input_opts )
       
-      debug("Model#save() [key=#{key.inspect}, data=#{data.inspect}, timestamp=#{opts[:timestamp].inspect}]")
+      debug{"Model#save() [key=#{key.inspect}, data=#{data.inspect}, timestamp=#{opts[:timestamp].inspect}]"}
 
       if !self.valid?
         raise ConstraintViolation, "#{self.class.name} failed constraint #{self.errors.full_messages.join("\n")}"
@@ -118,7 +118,7 @@ module Rhino
     end
     
     def destroy
-      debug("Model#destroy() [key=#{key.inspect}]")
+      debug{"Model#destroy() [key=#{key.inspect}]"}
       self.class.table.delete_row(key)
     end
     
@@ -163,14 +163,14 @@ module Rhino
     
     # Data that is set here must have HBase-style keys (like {'meta:author'=>'John'}), not underscored keys {:meta_author=>'John'}.
     def data=(some_data)
-      debug("Model#data=(#{some_data.inspect})")
+      debug{"Model#data=(#{some_data.inspect})"}
       @data = {}
       some_data.each do |data_key,val|
         attr_name = self.class.determine_attribute_name(data_key)
         raise(ArgumentError, "invalid attribute name for (#{data_key.inspect},#{val.inspect})") unless attr_name
         set_attribute(attr_name, val)
       end
-      debug("Model#data == #{data.inspect}")
+      debug{"Model#data == #{data.inspect}"}
       data
     end
 
@@ -188,8 +188,17 @@ module Rhino
     # CLASS METHODS #
     #################
     
-    def Model.connect(host, port, adapter=Rhino::HBaseThriftInterface)
-      debug("Model.connect(#{host.inspect}, #{port.inspect}, #{adapter.inspect})")
+    def Model.connect(host, port, adapter=nil)
+
+      unless adapter
+        if RUBY_PLATFORM == "java"
+          adapter = Rhino::HBaseNativeJavaInterface
+        else
+          adapter = Rhino::HBaseThriftInterface
+        end
+      end
+
+      debug{"Model.connect(#{host.inspect}, #{port.inspect}, #{adapter.inspect})"}
       raise "already connected" if connection
       @adapter = adapter
       @conn = adapter::Base.new(host, port)
@@ -206,7 +215,7 @@ module Rhino
 
     def Model.disconnect
       return unless Model.connected?
-      debug("Model.disconnect")
+      debug{"Model.disconnect"}
       @conn.disconnect
       @conn = nil
       @adapter = nil
@@ -238,7 +247,7 @@ module Rhino
       name = name.to_s.gsub(':','')
       self.column_families ||= []
       if self.column_families.include?(name)
-        debug("column_family '#{name}' already defined for #{self.class.name}")
+        debug{"column_family '#{name}' already defined for #{self.class.name}"}
         self.column_families.delete(name)
       end
       self.column_families << name
@@ -350,7 +359,7 @@ module Rhino
       get_opts = rowkeys.extract_options!
       rowkeys.flatten!      
 
-      debug("Model.get(#{rowkeys.inspect}, #{get_opts.inspect})")
+      debug{"Model.get(#{rowkeys.inspect}, #{get_opts.inspect})"}
       
       # handle opts
       get_opts.keys.each do |fo_key|
@@ -383,7 +392,7 @@ module Rhino
           args << opts
           
           data = table.get( *args )
-          debug("-> found [key=#{rowkeys.inspect}, data=#{data.inspect}]")
+          debug{"-> found [key=#{rowkeys.inspect}, data=#{data.inspect}]"}
 
           rowkeys.each do |key|
             new_data = data.find {|item| item['key'] == key } 

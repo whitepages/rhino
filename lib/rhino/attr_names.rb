@@ -6,7 +6,7 @@ module Rhino
     
     module ClassMethods
       def determine_attribute_name(attr_name)
-        debug("   determine_attribute_name(#{attr_name.inspect})")
+        debug{"   determine_attribute_name(#{attr_name.inspect})"}
         
         attr_name = attr_name.to_s
         return nil if !attr_name or attr_name.empty?

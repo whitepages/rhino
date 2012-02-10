@@ -10,8 +10,10 @@ module Rhino
       @@enable_debug = false
     end
     
-    def debug(str)
-      puts "\e[33mDEBUG: #{str}\e[0m" if @@enable_debug
+    def debug(str = "")
+      return unless @@enable_debug
+      str << yield if block_given?
+      puts "\e[33mDEBUG: #{str}\e[0m"
     end
 
     def highlight(str)

@@ -29,6 +29,16 @@ require 'rhino/interface/hbase-fake/base'
 require 'rhino/interface/hbase-fake/table'
 require 'rhino/interface/hbase-fake/scanner'
 
+if RUBY_PLATFORM == "java"
+  # TODO: build this to reference a maven-based set of hbase jars
+  Dir["/usr/lib/hbase/\*.jar"].each { |jar| require jar }
+  Dir["/usr/lib/hbase/lib/\*.jar"].each { |jar| require jar }
+
+  require 'rhino/interface/hbase-java/base'
+  require 'rhino/interface/hbase-java/table'
+  require 'rhino/interface/hbase-java/scanner'
+end
+
 
 require 'rhino/debug'
 require 'rhino/constraints'

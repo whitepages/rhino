@@ -29,20 +29,20 @@ describe Rhino::Interface::Table do
       @page_table.put('abc', {'title:'=>'hello1', 'contents:'=>'hello there'}, ts)
       @page_table.put('abc', {'title:'=>'hello2'}, ts+1000)
       @page_table.put('abc', {'title:'=>'hello3'}, ts+5000)
-      @page_table.get('abc')['timestamp'].should == ts+5000
+      @page_table.get('abc')[0]['timestamp'].should == ts+5000
     end
     
     it "should get the timestamp" do
       @page_table.put('a99', {'title:'=>'hello2'})
-      @page_table.get('a99')['timestamp'].should be_within(100).of((Time.now.to_f * 1000).to_i)
+      @page_table.get('a99')[0]['timestamp'].should be_within(100).of((Time.now.to_f * 1000).to_i)
     end
     
     it "should retrieve the row" do
       key = 'hello.com'
       @page_table.put(key, {'title:'=>'howdy'})
-      row = @page_table.get(key)
-      row.keys.sort.should == %w(timestamp title:)
-      row['title:'].should == 'howdy'
+      row = @page_table.get(key)[0]
+      row.keys.sort.should == %w(key timestamp title:)
+      row['title:'].value.should == 'howdy'
     end
   end
   
@@ -84,10 +84,10 @@ describe Rhino::Interface::Table do
     it "should delete cells that previously existed if their value is changed to nil" do
       key = 'example.com'
       @page_table.put(key, {'title:'=>'howdy', 'links:com.google'=>'Google'})
-      @page_table.get(key).keys.include?('links:com.google').should == true
+      @page_table.get(key)[0].keys.include?('links:com.google').should == true
       # the cell has been deleted
       @page_table.put(key, {'title:'=>'howdy', 'links:com.google'=>nil})
-      @page_table.get(key).keys.include?('links:com.google').should == false
+      @page_table.get(key)[0].keys.include?('links:com.google').should == false
     end
   end
   
@@ -99,9 +99,9 @@ describe Rhino::Interface::Table do
     it "should update the values" do
       key = 'hi.example.com'
       @page_table.put(key, {'title:'=>'howdy'})
-      @page_table.get(key)['title:'].should == 'howdy'
+      @page_table.get(key)[0]['title:'].value.should == 'howdy'
       @page_table.put(key, {'title:'=>'goodbye'})
-      @page_table.get(key)['title:'].should == 'goodbye'
+      @page_table.get(key)[0]['title:'].value.should == 'goodbye'
     end
   end
 end

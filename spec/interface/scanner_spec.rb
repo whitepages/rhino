@@ -30,7 +30,7 @@ describe Rhino::Interface::Scanner do
   describe "scanning all rows" do
     it "should return all rows" do
       rows = @page_table.scan.collect
-      rows.collect { |row| row['title:'] }.should == @titles
+      rows.collect { |row| row['title:'].value }.should == @titles
       rows.collect { |row| row['key'] }.should    == @data
     end
   end
